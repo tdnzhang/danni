@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -643,7 +644,6 @@ const BUILTIN = [
   {h:'因此',p:'yīncǐ',b:'ㄧㄣ ㄘˇ',e:'therefore; as a result; consequently',con:'neu',reg:'for',freq:'high',ety:'因(yīn) because/cause, 此(cǐ) this. Because of this — therefore.',comp:'因(yīn cause/because) + 此(cǐ this)',ex:'她準備充分，因此面試表現得非常好。',exen:'She prepared thoroughly; therefore her interview went very well.',src:'class',tags:'connector'},
   {h:'不過',p:'búguò',b:'ㄅㄨˊ ㄍㄨㄛˋ',e:'however; but; yet (softer than 但是)',con:'neu',reg:'cas',freq:'high',ety:'不(bù) not, 過(guò) pass/exceed. Not exceeding — a soft "but" that acknowledges the previous point before adding contrast.',comp:'不(bù not) + 過(guò pass/exceed)',ex:'他說得很有道理，不過我還是有一些疑問。',exen:'What he said made good sense, however I still have some doubts.',src:'class',tags:'connector'},
   {h:'山珍海味',p:'shān zhēn hǎi wèi',b:'ㄕㄢ ㄓㄣ ㄏㄞˇ ㄨㄟˋ',e:'exotic delicacies; the finest food from mountains and sea',con:'pos',reg:'for',freq:'med',ety:'山珍(shān zhēn) treasures from the mountain, 海味(hǎi wèi) flavors from the sea. The best and rarest ingredients from land and sea — a feast of exotic delicacies.',comp:'山(shān mountain) + 珍(zhēn treasure/precious) + 海(hǎi sea) + 味(wèi flavor/taste)',ex:'這家餐廳專門提供山珍海味，是招待貴賓的首選。',exen:'This restaurant specializes in exotic delicacies — the top choice for entertaining VIPs.',src:'class',tags:'idiom food'},
-,
   {h:'壓縮',p:'yāsuō',b:'ㄧㄚ ㄙㄨㄛ',e:'to compress; to stack; to condense',con:'neu',reg:'for',freq:'high',ety:'壓(yā) press down + 縮(suō) shrink. Pressing and shrinking together — compression.',comp:'壓(yā press) + 縮(suō shrink)',ex:'把行程壓縮到三天，雖然很累但效率很高。',exen:'Compressing the schedule into three days was exhausting but very efficient.',src:'class',tags:'business'},
   {h:'能免則免',p:'néng miǎn zé miǎn',b:'ㄋㄥˊ ㄇㄧㄢˇ ㄗㄜˊ ㄇㄧㄢˇ',e:'if you can avoid it, avoid it; minimize where possible',con:'neu',reg:'cas',freq:'med',ety:'能(néng) can + 免(miǎn) avoid + 則(zé) then + 免(miǎn) avoid. If avoidable, avoid it — a practical philosophy of minimizing unnecessary effort or risk.',comp:'能(néng can) + 免(miǎn avoid) + 則(zé then) + 免(miǎn avoid)',ex:'開會能免則免，有事情直接傳訊息就好。',exen:'Avoid meetings if you can — just send a message if something comes up.',src:'class',tags:''},
   {h:'靈魂',p:'línghún',b:'ㄌㄧㄥˊ ㄏㄨㄣˊ',e:'soul; spirit; essence',con:'pos',reg:'cas',freq:'high',ety:'靈(líng) spirit/magical + 魂(hún) soul. The spiritual essence that animates a person.',comp:'靈(líng spirit) + 魂(hún soul)',ex:'她說音樂是她的靈魂，沒有音樂就活不下去。',exen:'She says music is her soul — she can\'t live without it.',src:'class',tags:''},
@@ -851,35 +851,8 @@ let quizStats = { again: 0, hard: 0, good: 0, easy: 0 };
 let openWord = null;
 
 // ─── LOAD DATA ───────────────────────────────────────────────────────────────
-async function loadData() {
-  showSync('載入中...', false);
-  allWords = [...BUILTIN];
-
-  try {
-    const resp = await fetch(SHEET_URL + '&t=' + Date.now());
-    if (resp.ok) {
-      const text = await resp.text();
-      const rows = parseCSV(text);
-      if (rows.length > 1) {
-        const headers = rows[0].map(h => h.trim().toLowerCase());
-        const sheetWords = rows.slice(1).filter(r => r[0] && r[0].trim()).map(r => {
-          const w = {};
-          headers.forEach((h,i) => w[h] = (r[i]||'').trim());
-          return { h:w.hanzi, p:w.pinyin, b:w.bopomofo, e:w.english,
-            con:w.connotation, reg:w.register, freq:w.frequency,
-            ety:w.etymology, comp:w.components, ex:w.example,
-            exen:w.exampleenglish||'', src:w.source, tags:w.tags||'' };
-        });
-        // merge: sheet words override built-in by hanzi
-        const builtinMap = new Map(BUILTIN.map(w => [w.h, w]));
-        sheetWords.forEach(w => builtinMap.set(w.h, w));
-        allWords = Array.from(builtinMap.values());
-        showSync('✓ 已同步 Google Sheets (' + sheetWords.length + ' 個新詞)', false);
-        setTimeout(() => hideSync(), 3000);
-      } else { hideSync(); }
-    } else { hideSync(); }
-  } catch(e) { hideSync(); }
-
+function loadData() {
+  allWords = [...BUILTIN].filter(w => w && w.h);
   updateHeader();
   updateDueBadge();
   renderBrowse();
