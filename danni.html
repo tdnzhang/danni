@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>丹妮 — 我的中文單字本</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;900&family=Inter:wght@300;400;500;600&display=swap');
+
+  :root {
+    --ink: #1a1a2e;
+    --paper: #faf8f5;
+    --red: #c0392b;
+    --gold: #d4a853;
+    --sage: #7a9e7e;
+    --mist: #e8e4dd;
+    --known: #7a9e7e;
+    --learning: #c0392b;
+    --neutral: #888;
+    --pattern: #5b6fa6;
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--ink);
+    color: white;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-title {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: 2px;
+  }
+  .header-title span { color: var(--gold); }
+  .header-stats {
+    font-size: 12px;
+    color: rgba(255,255,255,0.6);
+    text-align: right;
+    line-height: 1.6;
+  }
+  .header-stats b { color: var(--gold); }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    background: white;
+    border-bottom: 2px solid var(--mist);
+    position: sticky;
+    top: 57px;
+    z-index: 99;
+  }
+  .tab {
+    flex: 1;
+    padding: 12px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--neutral);
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+  }
+  .tab.active {
+    color: var(--ink);
+    border-bottom-color: var(--red);
+  }
+
+  /* BROWSE */
+  .browse-controls {
+    padding: 16px;
+    background: white;
+    border-bottom: 1px solid var(--mist);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .search-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--mist);
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    background: var(--paper);
+  }
+  .search-input:focus { border-color: var(--red); }
+
+  .filters {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .filter-btn {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1.5px solid var(--mist);
+    background: white;
+    color: var(--ink);
+    transition: all 0.15s;
+  }
+  .filter-btn.active {
+    background: var(--ink);
+    color: white;
+    border-color: var(--ink);
+  }
+
+  /* DUE BADGE */
+  .due-badge {
+    display: inline-block;
+    background: var(--red);
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-left: 4px;
+  }
+
+  /* WORD GRID */
+  .word-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .word-card {
+    background: white;
+    border-radius: var(--radius);
+    padding: 16px 12px 12px;
+    border: 1.5px solid var(--mist);
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+  }
+  .word-card:hover { border-color: var(--red); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+  .word-card.known { border-left: 3px solid var(--known); }
+  .word-card.learning { border-left: 3px solid var(--learning); }
+  .word-card.pattern-card { border-left: 3px solid var(--pattern); }
+
+  .card-hanzi {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 28px;
+    font-weight: 600;
+    line-height: 1.2;
+    margin-bottom: 6px;
+  }
+  .card-pinyin { font-size: 12px; color: var(--red); margin-bottom: 2px; }
+  .card-english { font-size: 12px; color: #555; line-height: 1.4; }
+
+  .card-badges {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+  .badge {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-weight: 500;
+  }
+  .badge-pos { background: #e8f5e9; color: #2e7d32; }
+  .badge-neg { background: #fce4ec; color: #c62828; }
+  .badge-neu { background: #f5f5f5; color: #666; }
+  .badge-cas { background: #fff3e0; color: #e65100; }
+  .badge-for { background: #e3f2fd; color: #1565c0; }
+  .badge-wri { background: #f3e5f5; color: #6a1b9a; }
+  .badge-src { background: #fce4ec; color: #880e4f; }
+  .badge-conn { background: #e8eaf6; color: var(--pattern); }
+  .badge-freq-high { background: #fff8e1; color: #f57f17; }
+
+  .sm2-indicator {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+  .sm2-due { background: var(--red); }
+  .sm2-ok { background: var(--sage); }
+  .sm2-new { background: var(--mist); border: 1px solid #ccc; }
+
+  /* DETAIL DRAWER */
+  .drawer-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 200;
+    display: none;
+    align-items: flex-end;
+  }
+  .drawer-overlay.open { display: flex; }
+  .drawer {
+    background: white;
+    border-radius: 20px 20px 0 0;
+    padding: 24px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    position: relative;
+  }
+  .drawer-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--mist);
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .drawer-hanzi {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 52px;
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .drawer-pinyin { font-size: 18px; color: var(--red); margin-bottom: 2px; }
+  .drawer-bopomofo { font-size: 14px; color: #888; margin-bottom: 4px; }
+  .drawer-english { font-size: 16px; font-weight: 500; margin-bottom: 16px; }
+
+  .drawer-section { margin-bottom: 16px; }
+  .drawer-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #888;
+    margin-bottom: 6px;
+  }
+  .drawer-text { font-size: 14px; line-height: 1.6; color: #333; }
+  .drawer-example {
+    font-size: 14px;
+    line-height: 1.7;
+    background: var(--paper);
+    padding: 12px;
+    border-radius: 8px;
+    border-left: 3px solid var(--gold);
+  }
+  .drawer-example .zh { font-family: 'Noto Serif TC', serif; font-size: 15px; }
+  .drawer-example .en { color: #666; font-size: 13px; margin-top: 4px; }
+
+  .audio-btn {
+    background: var(--ink);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    cursor: pointer;
+    margin-bottom: 16px;
+  }
+  .audio-btn:hover { background: var(--red); }
+
+  /* QUIZ */
+  .quiz-container {
+    padding: 16px;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+  .quiz-progress {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: #666;
+  }
+  .progress-bar {
+    height: 4px;
+    background: var(--mist);
+    border-radius: 2px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--red);
+    border-radius: 2px;
+    transition: width 0.3s;
+  }
+
+  .quiz-card {
+    background: white;
+    border-radius: 16px;
+    border: 2px solid var(--mist);
+    min-height: 260px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 32px 24px;
+    text-align: center;
+    transition: all 0.3s;
+    margin-bottom: 16px;
+    position: relative;
+  }
+  .quiz-card:hover { border-color: var(--red); }
+  .quiz-card.flipped { background: var(--ink); color: white; border-color: var(--ink); }
+
+  .quiz-hanzi {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 64px;
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .quiz-prompt { font-size: 13px; color: #999; margin-top: 12px; }
+  .quiz-card.flipped .quiz-prompt { color: rgba(255,255,255,0.5); }
+
+  .quiz-reveal {
+    margin-top: 16px;
+    text-align: center;
+  }
+  .quiz-pinyin { font-size: 20px; color: var(--gold); margin-bottom: 6px; }
+  .quiz-english { font-size: 16px; color: rgba(255,255,255,0.85); }
+  .quiz-src { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 8px; }
+
+  /* SM2 BUTTONS */
+  .sm2-buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .sm2-btn {
+    padding: 12px 8px;
+    border-radius: 10px;
+    border: none;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    line-height: 1.3;
+  }
+  .sm2-again { background: #fce4ec; color: #c62828; }
+  .sm2-hard { background: #fff3e0; color: #e65100; }
+  .sm2-good { background: #e8f5e9; color: #2e7d32; }
+  .sm2-easy { background: #e3f2fd; color: #1565c0; }
+  .sm2-btn:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+
+  .sm2-labels {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  .sm2-label { font-size: 10px; color: #999; }
+
+  .quiz-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+  }
+  .quiz-action-btn {
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 1.5px solid var(--mist);
+    background: white;
+    font-size: 13px;
+    cursor: pointer;
+    color: #555;
+  }
+  .quiz-action-btn:hover { border-color: var(--ink); color: var(--ink); }
+
+  .quiz-done {
+    text-align: center;
+    padding: 40px 20px;
+  }
+  .quiz-done-hanzi {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 48px;
+    margin-bottom: 12px;
+  }
+  .quiz-done h2 { font-size: 20px; margin-bottom: 8px; }
+  .quiz-done p { color: #666; font-size: 14px; margin-bottom: 24px; }
+  .quiz-done-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .done-stat {
+    background: white;
+    border-radius: 10px;
+    padding: 12px 8px;
+    border: 1.5px solid var(--mist);
+  }
+  .done-stat-num { font-size: 22px; font-weight: 700; color: var(--ink); }
+  .done-stat-label { font-size: 10px; color: #999; margin-top: 2px; }
+  .restart-btn {
+    background: var(--ink);
+    color: white;
+    border: none;
+    padding: 14px 32px;
+    border-radius: 30px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .restart-btn:hover { background: var(--red); }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #999;
+  }
+  .empty-state .big { font-size: 40px; margin-bottom: 12px; }
+
+  /* LOADING */
+  .loading {
+    text-align: center;
+    padding: 60px 20px;
+    color: #999;
+    font-size: 14px;
+  }
+  .loading .spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--mist);
+    border-top-color: var(--red);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* SYNC BAR */
+  .sync-bar {
+    background: var(--sage);
+    color: white;
+    text-align: center;
+    padding: 8px;
+    font-size: 12px;
+    display: none;
+  }
+  .sync-bar.show { display: block; }
+  .sync-bar.error { background: var(--red); }
+
+  /* PATTERN CARD STYLE */
+  .pattern-hanzi {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--pattern);
+    margin-bottom: 4px;
+  }
+</style>
+</head>
+<body>
+
+<div class="sync-bar" id="syncBar"></div>
+
+<header class="header">
+  <div class="header-title">丹<span>妮</span></div>
+  <div class="header-stats" id="headerStats">載入中...</div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('browse')">📚 瀏覽</button>
+  <button class="tab" onclick="showTab('quiz')">🎯 測驗<span class="due-badge" id="dueBadge" style="display:none"></span></button>
+</div>
+
+<!-- BROWSE TAB -->
+<div id="browseTab">
+  <div class="browse-controls">
+    <input type="text" class="search-input" id="searchInput" placeholder="搜尋漢字、拼音、英文..." oninput="renderBrowse()">
+    <div class="filters" id="filterBtns"></div>
+  </div>
+  <div class="word-grid" id="wordGrid">
+    <div class="loading"><div class="spinner"></div>載入單字中...</div>
+  </div>
+</div>
+
+<!-- QUIZ TAB -->
+<div id="quizTab" style="display:none">
+  <div class="quiz-container" id="quizContainer"></div>
+</div>
+
+<!-- DETAIL DRAWER -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer(event)">
+  <div class="drawer" id="drawer">
+    <button class="drawer-close" onclick="closeDrawer()">×</button>
+    <div id="drawerContent"></div>
+  </div>
+</div>
+
+<script>
+// ─── GOOGLE SHEETS URL ───────────────────────────────────────────────────────
+const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQd-DR0iklTPna9595UQL6hmdY29NaITUeegB40idJ7q4SFAfA4_V_d9kDjWBp2UshpuKg5iZPs3sE7/pub?gid=0&single=true&output=csv';
+
+// ─── BUILT-IN VOCAB (fallback + initial data) ────────────────────────────────
+const BUILTIN = [
+  // FORMAT: {h, p, b, e, con, reg, freq, ety, comp, ex, exen, src, tags}
+  // IDIOMS & CHENGYU
+  {h:'雲裡霧裡',p:'yún lǐ wù lǐ',b:'ㄩㄣˊ ㄌㄧˇ ㄨˋ ㄌㄧˇ',e:'confused, lost, in a fog',con:'neg',reg:'cas',freq:'med',ety:'Literally "inside clouds and mist" — the image of being so surrounded by fog you can\'t see where you are or where you\'re going.',comp:'雲(yún cloud) + 霧(wù fog) + 裡(lǐ inside)',ex:'他說的話讓我完全雲裡霧裡，根本不知道他在表達什麼。',exen:'What he said left me completely lost — I had no idea what he was trying to express.',src:'class',tags:'idiom'},
+  {h:'破罐子破摔',p:'pò guàn zi pò shuāi',b:'ㄆㄛˋ ㄍㄨㄢˋ ㄗ ㄆㄛˋ ㄕㄨㄞ',e:'if it\'s already broken, smash it — giving up entirely after a setback',con:'neg',reg:'cas',freq:'med',ety:'A broken jar (罐子) — once cracked, you might as well smash it all the way. Describes self-destructive resignation after something goes wrong.',comp:'破(pò broken) + 罐子(guànzi jar) + 摔(shuāi smash/throw)',ex:'他考試沒過就開始破罐子破摔，連複習都不願意做了。',exen:'After failing the exam he just gave up entirely — he wouldn\'t even bother reviewing.',src:'class',tags:'idiom'},
+  {h:'溫水煮青蛙',p:'wēn shuǐ zhǔ qīng wā',b:'ㄨㄣ ㄕㄨㄟˇ ㄓㄨˇ ㄑㄧㄥ ㄨㄚ',e:'boiling frog syndrome — danger that sneaks up gradually',con:'neg',reg:'cas',freq:'med',ety:'The frog placed in cool water that\'s slowly heated doesn\'t notice the danger until it\'s too late. Used for situations where gradual change obscures a serious threat.',comp:'溫(wēn warm) + 水(shuǐ water) + 煮(zhǔ boil) + 青蛙(qīngwā frog)',ex:'公司慢慢失去市場，卻沒人警覺，真是溫水煮青蛙。',exen:'The company was slowly losing market share but nobody noticed — classic boiling frog.',src:'class',tags:'idiom'},
+  {h:'天花亂墜',p:'tiān huā luàn zhuì',b:'ㄊㄧㄢ ㄏㄨㄚ ㄌㄨㄢˋ ㄓㄨㄟˋ',e:'to speak so beautifully that flowers fall from the sky — flowery, exaggerated talk',con:'neg',reg:'cas',freq:'med',ety:'From a Buddhist legend: a monk\'s preaching was so moving that flowers rained down from heaven. Now used ironically for empty, over-the-top promises.',comp:'天(tiān sky) + 花(huā flower) + 亂(luàn chaotic) + 墜(zhuì fall)',ex:'他說得天花亂墜，但最後什麼承諾都沒兌現。',exen:'He made the most beautiful promises, but in the end none of them materialized.',src:'class',tags:'idiom connector'},
+  {h:'矛盾',p:'máodùn',b:'ㄇㄠˊ ㄉㄨㄣˋ',e:'contradiction; conflict; contradictory',con:'neg',reg:'cas',freq:'high',ety:'Spear (矛) + shield (盾). From a story of a merchant selling both an unstoppable spear and an impenetrable shield — someone asked what happens when your spear meets your shield. The original paradox.',comp:'矛(máo spear) + 盾(dùn shield)',ex:'他的說法前後矛盾，讓人很難相信他。',exen:'His account contradicted itself — it was hard to believe him.',src:'class',tags:'idiom'},
+  {h:'籌碼',p:'chóumǎ',b:'ㄔㄡˊ ㄇㄚˇ',e:'bargaining chip; leverage; stake',con:'neu',reg:'cas',freq:'high',ety:'Bamboo tally sticks (籌) used for counting in ancient China, plus tokens (碼). Historically these were the physical chips used in gambling and accounting — your chips are your leverage.',comp:'籌(chóu tally/chip) + 碼(mǎ token/marker)',ex:'她手上握有關鍵資訊，這就是她最大的籌碼。',exen:'She held key information — that was her biggest bargaining chip.',src:'class',tags:'business'},
+  {h:'掙扎',p:'zhēngzhá',b:'ㄓㄥ ㄓㄚˊ',e:'to struggle; to fight against; inner conflict',con:'neg',reg:'cas',freq:'high',ety:'Both characters relate to resisting or pulling against force. 掙(zhēng) means to struggle free, 扎(zhá) means to pierce or push through — together the sense of fighting hard against something.',comp:'扌(shǒu hand radical) + 掙(zhēng pull free) + 扎(zhá pierce/push)',ex:'她在要繼續還是放棄之間掙扎了很久。',exen:'She struggled for a long time between continuing and giving up.',src:'class',tags:''},
+  {h:'顧慮',p:'gùlǜ',b:'ㄍㄨˋ ㄌㄩˋ',e:'concern; worry; hesitation about consequences',con:'neg',reg:'for',freq:'high',ety:'顧(gù) means to look back or attend to, 慮(lǜ) means to consider or worry. Together: looking back with concern, thinking carefully about what might go wrong.',comp:'顧(gù look back/attend) + 慮(lǜ consider/worry)',ex:'她有很多顧慮，不敢輕易做決定。',exen:'She had many concerns and didn\'t dare make a decision lightly.',src:'class',tags:''},
+  {h:'誘因',p:'yòuyīn',b:'ㄧㄡˋ ㄧㄣ',e:'incentive; motivating factor; inducement',con:'neu',reg:'for',freq:'high',ety:'誘(yòu) means to entice or lure, 因(yīn) means cause or reason. The cause that lures you — what draws you toward a behavior.',comp:'誘(yòu entice) + 因(yīn cause/reason)',ex:'加薪是員工努力工作最直接的誘因。',exen:'A raise is the most direct incentive for employees to work hard.',src:'class',tags:'business'},
+  {h:'取捨',p:'qǔshě',b:'ㄑㄩˇ ㄕㄜˇ',e:'trade-off; to choose what to keep and what to let go',con:'neu',reg:'for',freq:'high',ety:'取(qǔ) means to take/keep, 舍(shě) means to give up/release. Together: the act of deciding what to hold onto and what to release — every strategic decision.',comp:'取(qǔ take/keep) + 捨(shě release/let go)',ex:'在有限的預算下，如何取捨是最難的決策。',exen:'With a limited budget, deciding what to keep and what to cut is the hardest call.',src:'class',tags:'business'},
+  {h:'轉捩點',p:'zhuǎnlièdiǎn',b:'ㄓㄨㄢˇ ㄌㄧㄝˋ ㄉㄧㄢˇ',e:'turning point; pivotal moment',con:'neu',reg:'for',freq:'med',ety:'轉(zhuǎn) to turn, 捩(liè) to twist/pivot, 點(diǎn) point. A point at which something twists and changes direction.',comp:'轉(zhuǎn turn) + 捩(liè twist) + 點(diǎn point)',ex:'那次面試是她職涯的轉捩點。',exen:'That interview was the turning point in her career.',src:'class',tags:'business'},
+  {h:'停損點',p:'tíngsǔndiǎn',b:'ㄊㄧㄥˊ ㄙㄨㄣˇ ㄉㄧㄢˇ',e:'stop-loss point; the point at which you cut your losses',con:'neu',reg:'for',freq:'med',ety:'停(tíng) stop, 損(sǔn) loss/damage, 點(diǎn) point. The point where you stop before losses get worse — a term from finance now used broadly.',comp:'停(tíng stop) + 損(sǔn loss) + 點(diǎn point)',ex:'每個投資都應該先設好停損點。',exen:'Every investment should have a stop-loss point set in advance.',src:'class',tags:'business'},
+  {h:'障礙',p:"zhàng'ài",b:'ㄓㄤˋ ㄞˋ',e:'obstacle; barrier; hindrance',con:'neg',reg:'cas',freq:'high',ety:'障(zhàng) means a wall or barrier that blocks, 礙(ài) means to obstruct or impede. Together: something that physically or metaphorically blocks your path.',comp:'障(zhàng barrier/wall) + 礙(ài obstruct)',ex:'語言障礙讓他在國外工作遇到很多困難。',exen:'The language barrier caused him a lot of difficulty working abroad.',src:'class',tags:''},
+  {h:'韌性',p:'rènxìng',b:'ㄖㄣˋ ㄒㄧㄥˋ',e:'resilience; toughness; tenacity',con:'pos',reg:'for',freq:'high',ety:'韌(rèn) means tough and flexible like leather, 性(xìng) means nature or quality. The quality of bending without breaking.',comp:'韌(rèn tough/flexible) + 性(xìng nature/quality)',ex:'創業者最需要的特質就是韌性。',exen:'The most essential quality for an entrepreneur is resilience.',src:'class',tags:'business'},
+  {h:'婉轉',p:'wǎnzhuǎn',b:'ㄨㄢˇ ㄓㄨㄢˇ',e:'tactful; roundabout; gentle in expression',con:'pos',reg:'for',freq:'med',ety:'婉(wǎn) means graceful and gentle, 轉(zhuǎn) means to turn or wind around. Speaking in a gentle, winding way rather than bluntly — the art of saying hard things softly.',comp:'婉(wǎn graceful/gentle) + 轉(zhuǎn wind/turn)',ex:'她婉轉地拒絕了邀請，沒有讓對方難堪。',exen:'She tactfully declined the invitation without making the other person feel awkward.',src:'class',tags:''},
+  {h:'昂貴',p:'ángguì',b:'ㄤˊ ㄍㄨㄟˋ',e:'expensive; costly; high-priced',con:'neg',reg:'cas',freq:'high',ety:'昂(áng) means high or elevated, 貴(guì) means precious or costly. Price that is elevated — more formal and emphatic than just 貴 alone.',comp:'昂(áng high/elevated) + 貴(guì precious/costly)',ex:'這個品牌的東西太昂貴，不適合學生族群。',exen:'Products from this brand are too expensive for student budgets.',src:'class',tags:''},
+  {h:'邊界感',p:'biānjiègǎn',b:'ㄅㄧㄢ ㄐㄧㄝˋ ㄍㄢˇ',e:'sense of personal boundaries; knowing limits in relationships',con:'neu',reg:'cas',freq:'high',ety:'邊界(biānjiè) boundary/border, 感(gǎn) sense or feeling. The feeling of where your space ends and another\'s begins — a concept that\'s become very common in modern Taiwanese social discourse.',comp:'邊(biān edge) + 界(jiè boundary) + 感(gǎn sense)',ex:'好的友誼需要雙方都有邊界感。',exen:'A healthy friendship requires both parties to respect each other\'s boundaries.',src:'class',tags:''},
+  {h:'冒犯',p:'màofàn',b:'ㄇㄠˋ ㄈㄢˋ',e:'to offend; to insult; offense',con:'neg',reg:'cas',freq:'high',ety:'冒(mào) means to risk or rashly venture, 犯(fàn) means to violate or transgress. To rashly cross into another\'s territory — to offend them.',comp:'冒(mào rashly venture) + 犯(fàn violate/transgress)',ex:'他的玩笑冒犯了在場所有人。',exen:'His joke offended everyone in the room.',src:'class',tags:''},
+  {h:'清單',p:'qīngdān',b:'ㄑㄧㄥ ㄉㄢ',e:'list; checklist',con:'neu',reg:'cas',freq:'high',ety:'清(qīng) means clear or neat, 單(dān) means a sheet or slip. A clear, organized sheet — a list.',comp:'清(qīng clear/neat) + 單(dān sheet/slip)',ex:'出門旅行前我都會列一份清單，確認沒有忘記什麼。',exen:'Before traveling I always make a checklist to make sure I haven\'t forgotten anything.',src:'class',tags:''},
+  {h:'種族',p:'zhǒngzú',b:'ㄓㄨㄥˇ ㄗㄨˊ',e:'race; ethnicity',con:'neu',reg:'for',freq:'high',ety:'種(zhǒng) means type or kind (also seed), 族(zú) means group or clan. A category of human groups — race or ethnic group.',comp:'種(zhǒng type/kind) + 族(zú group/clan)',ex:'她的研究關注種族與職場不平等的關係。',exen:'Her research focuses on the relationship between race and workplace inequality.',src:'class',tags:''},
+  {h:'形影不離',p:'xíngyǐng bù lí',b:'ㄒㄧㄥˊ ㄧㄥˇ ㄅㄨˋ ㄌㄧˊ',e:'inseparable; like a shadow that never leaves',con:'neu',reg:'cas',freq:'med',ety:'形(xíng) body/form, 影(yǐng) shadow, 不離(bù lí) never separates. Your shadow never leaves your body — used for people who are always together.',comp:'形(xíng form/body) + 影(yǐng shadow) + 不(bù not) + 離(lí separate)',ex:'這對雙胞胎從小到大形影不離。',exen:'These twins have been inseparable since childhood.',src:'class',tags:'idiom'},
+  {h:'無話不談',p:'wú huà bù tán',b:'ㄨˊ ㄏㄨㄚˋ ㄅㄨˋ ㄊㄢˊ',e:'nothing they can\'t talk about; can talk about anything',con:'pos',reg:'cas',freq:'high',ety:'無(wú) nothing, 話(huà) words/topics, 不(bù) not, 談(tán) to talk. There is nothing they do not discuss — total openness.',comp:'無(wú nothing) + 話(huà topic/words) + 不(bù not) + 談(tán discuss)',ex:'我跟我最好的朋友無話不談，什麼事都可以分享。',exen:'My best friend and I can talk about anything — there\'s nothing we can\'t share.',src:'class',tags:'idiom'},
+  {h:'左右為難',p:'zuǒ yòu wéi nán',b:'ㄗㄨㄛˇ ㄧㄡˋ ㄨㄟˊ ㄋㄢˊ',e:'caught between two difficult choices; in a dilemma',con:'neg',reg:'cas',freq:'high',ety:'Left and right both difficult (難). No matter which direction you turn — left or right — you face hardship. A perfect image of being stuck.',comp:'左(zuǒ left) + 右(yòu right) + 為(wéi be) + 難(nán difficult)',ex:'老闆要我留下來，客戶又急著要我去，讓我左右為難。',exen:'My boss wanted me to stay and my client urgently needed me there — I was caught in the middle.',src:'class',tags:'idiom'},
+  {h:'行行出狀元',p:'háng háng chū zhuàngyuán',b:'ㄏㄤˊ ㄏㄤˊ ㄔㄨ ㄓㄨㄤˋ ㄩㄢˊ',e:'every profession has its top talent; any field can produce excellence',con:'pos',reg:'cas',freq:'med',ety:'行(háng) means profession or trade, 狀元(zhuàngyuán) was the top scorer in the imperial exams — the highest possible achievement. Every field has its champion.',comp:'行(háng trade/profession) + 出(chū produce) + 狀元(zhuàngyuán top talent)',ex:'不一定要念名校，行行出狀元，找到自己的熱情最重要。',exen:'You don\'t have to go to a top school — every field has its stars, finding your passion matters most.',src:'class',tags:'idiom'},
+  {h:'佛系',p:'fóxì',b:'ㄈㄛˊ ㄒㄧˋ',e:'Buddha-like; laid-back; indifferent to outcomes; going with the flow',con:'neu',reg:'cas',freq:'high',ety:'佛(fó) Buddha, 系(xì) style or type. A lifestyle attitude characterized by Buddhist-like detachment — not chasing, not forcing, accepting whatever comes.',comp:'佛(fó Buddha) + 系(xì style/type)',ex:'他對升職完全佛系，有就有，沒有也無所謂。',exen:'He\'s completely zen about promotions — if it happens it happens, if not, no big deal.',src:'class',tags:'slang'},
+  {h:'厭世',p:'yànshì',b:'ㄧㄢˋ ㄕˋ',e:'world-weary; fed up with society; cynical',con:'neg',reg:'cas',freq:'high',ety:'厭(yàn) means to be sick of or tired of, 世(shì) means the world. Tired of the world — a mood of exhaustion with modern life and its pressures.',comp:'厭(yàn sick of/tired of) + 世(shì world)',ex:'連續加班三週後，她開始覺得有點厭世。',exen:'After three straight weeks of overtime she started feeling seriously world-weary.',src:'class',tags:'slang'},
+  {h:'糾纏',p:'jiūchán',b:'ㄐㄧㄡ ㄔㄢˊ',e:'to entangle; to cling; to pester; to get tangled up',con:'neg',reg:'cas',freq:'high',ety:'糾(jiū) means to twist or tangle cords together, 纏(chán) means to wind around. Two kinds of twisting and entangling — getting wrapped up in something or someone.',comp:'糾(jiū twist/tangle) + 纏(chán wind around)',ex:'她決定不再跟那段感情糾纏，好好向前走。',exen:'She decided to stop getting entangled in that relationship and move forward.',src:'song:枉然思',tags:'song'},
+  {h:'是非',p:'shìfēi',b:'ㄕˋ ㄈㄟ',e:'right and wrong; disputes; gossip',con:'neg',reg:'cas',freq:'high',ety:'是(shì) means right/correct, 非(fēi) means wrong/not. The eternal pair: what is right and what is wrong, and all the argument that comes between them.',comp:'是(shì right/correct) + 非(fēi wrong/not)',ex:'他這個人最討厭惹是非，跟誰都保持好關係。',exen:'He hates stirring up disputes — he maintains good relations with everyone.',src:'song:枉然思',tags:'song'},
+  {h:'猶如',p:'yóurú',b:'ㄧㄡˊ ㄖㄨˊ',e:'just like; as if; similar to',con:'neu',reg:'for',freq:'high',ety:'猶(yóu) means still or just as, 如(rú) means like or as. A formal connector for comparison — used in writing and speeches.',comp:'猶(yóu still/just) + 如(rú like/as)',ex:'她的聲音猶如天籟，讓全場都靜了下來。',exen:'Her voice was like music from heaven — the whole room fell silent.',src:'song:枉然思',tags:'song connector'},
+  {h:'荒唐',p:'huāngtáng',b:'ㄏㄨㄤ ㄊㄤˊ',e:'absurd; outrageous; ridiculous',con:'neg',reg:'cas',freq:'high',ety:'荒(huāng) means wild/desolate/uncontrolled, 唐(táng) means empty/hollow. Wild and empty — behavior that has no reasonable basis.',comp:'荒(huāng wild/uncontrolled) + 唐(táng empty/hollow)',ex:'他竟然因為這種理由辭職，真是太荒唐了。',exen:'He actually quit over a reason like that — absolutely ridiculous.',src:'song:枉然思',tags:'song'},
+  {h:'肆意',p:'sìyì',b:'ㄙˋ ㄧˋ',e:'wantonly; without restraint; to do as one pleases',con:'neg',reg:'for',freq:'med',ety:'肆(sì) means unrestrained or to go to the extreme, 意(yì) means will or intention. Acting with completely unrestrained will — doing whatever you want without limit.',comp:'肆(sì unrestrained/extreme) + 意(yì will/intention)',ex:'她不能讓對方肆意破壞自己建立的信任。',exen:'She couldn\'t let him wantonly destroy the trust she had built.',src:'song:枉然思',tags:'song'},
+  {h:'玩弄',p:'wánnòng',b:'ㄨㄢˊ ㄋㄨㄥˋ',e:'to toy with; to manipulate; to play with someone\'s emotions',con:'neg',reg:'cas',freq:'med',ety:'玩(wán) means to play, 弄(nòng) means to handle or fiddle with. To play and fiddle with something — treating a person like a toy.',comp:'玩(wán play) + 弄(nòng handle/fiddle)',ex:'她終於意識到自己一直被玩弄，決定離開。',exen:'She finally realized she\'d been manipulated all along and decided to leave.',src:'song:枉然思',tags:'song'},
+  {h:'囂張',p:'xiāozhāng',b:'ㄒㄧㄠ ㄓㄤ',e:'arrogant; brazen; outrageously bold',con:'neg',reg:'cas',freq:'high',ety:'囂(xiāo) means noisy and clamorous, 張(zhāng) means to spread out or expand. Making a lot of noise and expanding aggressively — arrogant and brash.',comp:'囂(xiāo noisy/clamorous) + 張(zhāng spread/expand)',ex:'他在會議上的態度非常囂張，讓所有人都很不舒服。',exen:'His attitude in the meeting was outrageously arrogant — it made everyone uncomfortable.',src:'song:枉然思',tags:'song'},
+  {h:'脈搏',p:'màibó',b:'ㄇㄞˋ ㄅㄛˊ',e:'pulse; heartbeat',con:'neu',reg:'for',freq:'med',ety:'脈(mài) means vein or pulse (the channels in the body), 搏(bó) means to beat or strike. The beating of the veins — your pulse.',comp:'脈(mài vein/pulse) + 搏(bó beat/strike)',ex:'醫生幫她量了脈搏，確認她的狀況穩定。',exen:'The doctor checked her pulse to confirm her condition was stable.',src:'song:枉然思',tags:'song'},
+  {h:'多餘',p:'duōyú',b:'ㄉㄨㄛ ㄩˊ',e:'superfluous; unnecessary; unwanted; surplus',con:'neg',reg:'cas',freq:'high',ety:'多(duō) means too much/extra, 餘(yú) means remainder/leftover. More than what remains — excess that wasn\'t needed.',comp:'多(duō extra/too much) + 餘(yú remainder/leftover)',ex:'她覺得自己在這段關係裡是多餘的。',exen:'She felt like she was the unnecessary one in the relationship.',src:'song:枉然思',tags:'song'},
+  {h:'流浪',p:'liúlàng',b:'ㄌㄧㄡˊ ㄌㄤˋ',e:'to wander; to drift; to be homeless; vagabond',con:'neg',reg:'cas',freq:'high',ety:'流(liú) means to flow or drift (like water), 浪(làng) means waves. To drift like a wave on water — wandering with no fixed home.',comp:'流(liú flow/drift) + 浪(làng wave)',ex:'大學畢業後他在歐洲流浪了一年，找自己真正想要的。',exen:'After graduating he wandered through Europe for a year, searching for what he really wanted.',src:'song:枉然思',tags:'song'},
+  {h:'治癒',p:'zhìyù',b:'ㄓˋ ㄩˋ',e:'to heal; healing; to cure',con:'pos',reg:'cas',freq:'high',ety:'治(zhì) means to govern or fix/remedy, 癒(yù) means to recover from illness. To fix the illness — to heal. Now widely used metaphorically for emotional healing.',comp:'治(zhì fix/remedy) + 癒(yù recover from illness)',ex:'她說聽音樂是最能治癒她的方式。',exen:'She says listening to music is the most healing thing for her.',src:'song:枉然思',tags:'song'},
+  {h:'擁擠',p:'yōngjǐ',b:'ㄩㄥ ㄐㄧˇ',e:'crowded; packed; jostling',con:'neg',reg:'cas',freq:'high',ety:'擁(yōng) means to embrace or press together, 擠(jǐ) means to squeeze or push. People pressing and squeezing together — a crowd.',comp:'擁(yōng press/embrace) + 擠(jǐ squeeze/push)',ex:'上下班時間地鐵非常擁擠，幾乎擠不上去。',exen:'The subway during rush hour is incredibly crowded — you can barely squeeze on.',src:'song:我喜歡你',tags:'song'},
+  {h:'不露聲色',p:'bù lù shēngsè',b:'ㄅㄨˋ ㄌㄨˋ ㄕㄥ ㄙㄜˋ',e:'without showing your feelings; poker face; keeping emotions hidden',con:'neu',reg:'cas',freq:'med',ety:'不露(bù lù) not revealing, 聲色(shēngsè) voice and expression. Not revealing your voice or facial expression — perfect composure that gives nothing away.',comp:'不(bù not) + 露(lù reveal) + 聲(shēng voice) + 色(sè expression/color)',ex:'她雖然很緊張，但面試時不露聲色，表現得很從容。',exen:'She was nervous but kept her composure during the interview, appearing completely calm.',src:'song:我喜歡你',tags:'song idiom'},
+  {h:'曖昧',p:'àimèi',b:'ㄞˋ ㄇㄟˋ',e:'ambiguous; flirty; undefined romantic relationship; situationship',con:'neu',reg:'cas',freq:'high',ety:'曖(ài) means dim or obscured, 昧(mèi) means unclear or hidden. Both characters suggest something dimly lit and unclear — a relationship that\'s not quite defined.',comp:'曖(ài dim/obscured) + 昧(mèi unclear/hidden)',ex:'他們曖昧了好幾個月，但誰也不敢先表白。',exen:'They\'d been in a situationship for months but neither dared confess first.',src:'song:我喜歡你',tags:'song'},
+  {h:'措辭',p:'cuòcí',b:'ㄘㄨㄛˋ ㄘˊ',e:'choice of words; wording; how something is phrased',con:'neu',reg:'for',freq:'med',ety:'措(cuò) means to arrange or place carefully, 辭(cí) means words or expression. Carefully placing your words — deliberate phrasing.',comp:'措(cuò arrange/place carefully) + 辭(cí words/expression)',ex:'在這種敏感話題上，措辭一定要非常小心。',exen:'On sensitive topics like this, you have to be very careful with your wording.',src:'song:我喜歡你',tags:'song'},
+  {h:'遲疑',p:'chíyí',b:'ㄔˊ ㄧˊ',e:'to hesitate; to waver; hesitation',con:'neg',reg:'cas',freq:'high',ety:'遲(chí) means slow or late, 疑(yí) means doubt or uncertainty. Slow because of doubt — the hesitation that comes from not being sure.',comp:'遲(chí slow/late) + 疑(yí doubt/uncertainty)',ex:'她在簽合約前遲疑了一下，最後還是簽了。',exen:'She hesitated before signing the contract but ultimately signed.',src:'song:我喜歡你',tags:'song'},
+  {h:'軌跡',p:'guǐjì',b:'ㄍㄨㄟˇ ㄐㄧˋ',e:'trajectory; path; orbit; trace',con:'neu',reg:'for',freq:'med',ety:'軌(guǐ) means track or rail (as in railroad), 跡(jì) means trace or mark left behind. The track and traces left behind — a path or trajectory.',comp:'軌(guǐ track/rail) + 跡(jì trace/mark)',ex:'每個人的人生都有不同的軌跡，沒有所謂的標準答案。',exen:'Everyone\'s life follows a different trajectory — there\'s no standard answer.',src:'song:我喜歡你',tags:'song'},
+  {h:'毫不留情',p:'háo bù liúqíng',b:'ㄏㄠˊ ㄅㄨˋ ㄌㄧㄡˊ ㄑㄧㄥˊ',e:'without any mercy; holding nothing back; ruthlessly',con:'neg',reg:'cas',freq:'med',ety:'毫(háo) means not even a hair\'s worth, 不(bù) not, 留情(liúqíng) to spare feelings/show mercy. Not sparing even a hair\'s worth of mercy — completely ruthless.',comp:'毫(háo not even a hair) + 不(bù not) + 留(liú spare/leave) + 情(qíng feelings/mercy)',ex:'評審毫不留情地指出了她報告中的每一個缺點。',exen:'The judge pointed out every flaw in her presentation without holding back.',src:'song:我喜歡你',tags:'song idiom'},
+  {h:'風鈴',p:'fēnglíng',b:'ㄈㄥ ㄌㄧㄥˊ',e:'wind chimes',con:'pos',reg:'cas',freq:'low',ety:'風(fēng) wind, 鈴(líng) bell or chime. Wind bells — wind chimes.',comp:'風(fēng wind) + 鈴(líng bell/chime)',ex:'陽台上的風鈴在微風中輕輕作響。',exen:'The wind chimes on the balcony tinkled gently in the breeze.',src:'song:我喜歡你',tags:'song'},
+  {h:'傳唱',p:'chuánchàng',b:'ㄔㄨㄢˊ ㄔㄤˋ',e:'to be passed down through song; to sing and spread',con:'pos',reg:'for',freq:'low',ety:'傳(chuán) means to pass down or transmit, 唱(chàng) means to sing. To transmit by singing — songs that carry culture across generations.',comp:'傳(chuán pass down/transmit) + 唱(chàng sing)',ex:'這首民謠在山區世代傳唱，從未被遺忘。',exen:'This folk song has been passed down through generations in the mountains, never forgotten.',src:'song:止戰之殤',tags:'song'},
+  {h:'不堪',p:'bùkān',b:'ㄅㄨˋ ㄎㄢ',e:'unbearable; devastating; cannot withstand',con:'neg',reg:'for',freq:'high',ety:'不(bù) not, 堪(kān) means to be able to bear or withstand. Cannot bear it — often used for pain or suffering that is overwhelming.',comp:'不(bù not) + 堪(kān bear/withstand)',ex:'那段記憶對她來說不堪回首。',exen:'Those memories are too painful for her to look back on.',src:'song:止戰之殤',tags:'song'},
+  {h:'遺棄',p:'yíqì',b:'ㄧˊ ㄑㄧˋ',e:'to abandon; to be deserted; to leave behind',con:'neg',reg:'for',freq:'med',ety:'遺(yí) means to leave behind or lose, 棄(qì) means to discard or cast off. To leave and discard — to abandon completely.',comp:'遺(yí leave behind/lose) + 棄(qì discard/cast off)',ex:'那隻狗被主人遺棄在路邊，幸好被好心人救了。',exen:'The dog was abandoned by its owner on the roadside — fortunately a kind person rescued it.',src:'song:止戰之殤',tags:'song'},
+  {h:'戰火',p:'zhànhuǒ',b:'ㄓㄢˋ ㄏㄨㄛˇ',e:'flames of war; warfare; conflict',con:'neg',reg:'for',freq:'med',ety:'戰(zhàn) means war or battle, 火(huǒ) means fire. The literal fires of war — used both for actual conflict and metaphorically for heated battles.',comp:'戰(zhàn war/battle) + 火(huǒ fire)',ex:'戰火蔓延到了平民居住的區域，造成嚴重傷亡。',exen:'The conflict spread to civilian areas, causing serious casualties.',src:'song:止戰之殤',tags:'song'},
+  {h:'恐懼',p:'kǒngjù',b:'ㄎㄨㄥˇ ㄐㄩˋ',e:'fear; dread; terror',con:'neg',reg:'cas',freq:'high',ety:'恐(kǒng) means to fear or dread, 懼(jù) also means fear and alarm. Two characters that both mean fear — combined for emphasis and intensity.',comp:'恐(kǒng fear/dread) + 懼(jù fear/alarm)',ex:'面對未知的未來，每個人心裡都有一定程度的恐懼。',exen:'Facing an unknown future, everyone has some degree of fear inside.',src:'song:止戰之殤',tags:'song'},
+  {h:'蒲公英',p:'púgōngyīng',b:'ㄆㄨˊ ㄍㄨㄥ ㄧㄥ',e:'dandelion',con:'neu',reg:'cas',freq:'low',ety:'A transliteration from a folk name. The image of dandelion seeds scattering in the wind is a powerful metaphor in Chinese poetry for dispersal, loss, and fleeting hope.',comp:'蒲(pú cattail/reed) + 公英(gōngyīng dandelion — phonetic)',ex:'她吹散了蒲公英，許了一個心願。',exen:'She blew the dandelion and made a wish.',src:'song:止戰之殤',tags:'song'},
+  {h:'飄散',p:'piāosàn',b:'ㄆㄧㄠ ㄙㄢˋ',e:'to drift and scatter; to waft away',con:'neg',reg:'cas',freq:'med',ety:'飄(piāo) means to flutter or float in the wind, 散(sàn) means to scatter or disperse. To float away and scatter — like smoke, petals, or hope disappearing.',comp:'飄(piāo flutter/float) + 散(sàn scatter/disperse)',ex:'煙火在夜空中綻放，然後慢慢飄散。',exen:'The fireworks bloomed in the night sky and then slowly drifted away.',src:'song:止戰之殤',tags:'song'},
+  {h:'絕望',p:'juéwàng',b:'ㄐㄩㄝˊ ㄨㄤˋ',e:'despair; hopeless; to give up all hope',con:'neg',reg:'cas',freq:'high',ety:'絕(jué) means to cut off or end completely, 望(wàng) means hope or to look forward. Hope that has been completely cut off — total despair.',comp:'絕(jué cut off/end) + 望(wàng hope/look forward)',ex:'即使在最絕望的時刻，她也沒有放棄。',exen:'Even in her most despairing moments, she never gave up.',src:'song:止戰之殤',tags:'song'},
+  {h:'殤',p:'shāng',b:'ㄕㄤ',e:'grief over a young or tragic death; mourning of the fallen',con:'neg',reg:'wri',freq:'low',ety:'A classical character for dying young or dying in battle — the grief that accompanies premature death. Rarely used in conversation but carries tremendous emotional weight in literary and lyrical contexts.',comp:'歹(dǎi death/evil) + 商(shāng phonetic hint)',ex:'這首曲子是為了紀念那些在戰爭中失去生命的人所寫的殤歌。',exen:'This piece is an elegy written to commemorate those who lost their lives in war.',src:'song:止戰之殤',tags:'song'},
+  {h:'抵抗',p:'dǐkàng',b:'ㄉㄧˇ ㄎㄤˋ',e:'to resist; to fight back; resistance',con:'neu',reg:'for',freq:'high',ety:'抵(dǐ) means to resist, prop against, or reach, 抗(kàng) means to resist or oppose. Two characters both meaning resistance — a strong, determined opposition.',comp:'抵(dǐ resist/prop against) + 抗(kàng resist/oppose)',ex:'她的身體已經沒有足夠的力量抵抗病毒。',exen:'Her body no longer had enough strength to resist the virus.',src:'song:止戰之殤',tags:'song'},
+  {h:'仇恨',p:'chóuhèn',b:'ㄔㄡˊ ㄏㄣˋ',e:'hatred; deep animosity; enmity',con:'neg',reg:'for',freq:'high',ety:'仇(chóu) means enemy or grudge, 恨(hèn) means to hate or resent deeply. An enemy combined with deep resentment — the heaviest kind of hatred.',comp:'仇(chóu enemy/grudge) + 恨(hèn hate/resent)',ex:'她選擇原諒，因為帶著仇恨對自己的傷害更大。',exen:'She chose to forgive because carrying hatred hurts yourself more.',src:'song:止戰之殤',tags:'song'},
+  {h:'饑荒',p:'jīhuāng',b:'ㄐㄧ ㄏㄨㄤ',e:'famine; food shortage',con:'neg',reg:'for',freq:'med',ety:'饑(jī) means hunger or famine, 荒(huāng) means desolate/barren. Barren hunger — a land stripped of food.',comp:'饑(jī hunger/famine) + 荒(huāng barren/desolate)',ex:'那個年代的饑荒造成了無數家庭的悲劇。',exen:'The famine of that era caused tragedies for countless families.',src:'song:止戰之殤',tags:'song'},
+  {h:'天真',p:'tiānzhēn',b:'ㄊㄧㄢ ㄓㄣ',e:'innocent; naive; childlike sincerity',con:'neu',reg:'cas',freq:'high',ety:'天(tiān) sky/heaven, 真(zhēn) real/true. True as heaven — the pure, unaffected sincerity of someone untouched by the world\'s complexity.',comp:'天(tiān heaven/natural) + 真(zhēn true/real)',ex:'她笑起來的樣子很天真，讓人一下子放鬆了警惕。',exen:'When she smiled she looked so innocent that people immediately let their guard down.',src:'song:止戰之殤',tags:'song'},
+  {h:'跌跌撞撞',p:'diēdiē zhuàngzhuàng',b:'ㄉㄧㄝ ㄉㄧㄝ ㄓㄨㄤˋ ㄓㄨㄤˋ',e:'stumbling along; lurching forward; moving unsteadily',con:'neg',reg:'cas',freq:'med',ety:'跌(diē) means to fall or stumble, 撞(zhuàng) means to bump or collide. Stumbling and bumping — the image of someone moving through life awkwardly, falling but continuing.',comp:'跌(diē fall/stumble) + 撞(zhuàng bump/collide)',ex:'他跌跌撞撞地走了十年，終於找到了自己的方向。',exen:'He stumbled along for ten years but finally found his direction.',src:'song:止戰之殤',tags:'song'},
+  // NEW IDIOMS FROM LIST
+  {h:'入不敷出',p:'rù bù fū chū',b:'ㄖㄨˋ ㄅㄨˋ ㄈㄨ ㄔㄨ',e:'income doesn\'t cover expenses; to make ends meet (failing)',con:'neg',reg:'cas',freq:'high',ety:'入(rù) income coming in, 不敷(bù fū) not enough to cover, 出(chū) expenses going out. Income that doesn\'t stretch far enough to cover what goes out.',comp:'入(rù income/come in) + 不(bù not) + 敷(fū cover/suffice) + 出(chū expenses/go out)',ex:'剛畢業那幾年，她的薪水入不敷出，每個月都在省錢。',exen:'In the first few years after graduation her income barely covered expenses — she was saving every month.',src:'class',tags:'idiom'},
+  {h:'南轅北轍',p:'nán yuán běi zhé',b:'ㄋㄢˊ ㄩㄢˊ ㄅㄟˇ ㄓㄜˊ',e:'going south when you want to go north; working against your own goal',con:'neg',reg:'for',freq:'med',ety:'南轅(nán yuán) a cart shaft pointing south, 北轍(běi zhé) wheel tracks going north. From a story of a man insisting his horse could go far even while heading the wrong direction. Action and intention completely misaligned.',comp:'南(nán south) + 轅(yuán cart shaft) + 北(běi north) + 轍(zhé wheel track)',ex:'用懲罰來激勵員工，其實是南轅北轍的做法。',exen:'Using punishment to motivate employees is completely counterproductive.',src:'class',tags:'idiom'},
+  {h:'強龍不壓地頭蛇',p:'qiáng lóng bù yā dì tóu shé',b:'ㄑㄧㄤˊ ㄌㄨㄥˊ ㄅㄨˋ ㄧㄚ ㄉㄧˋ ㄊㄡˊ ㄕㄜˊ',e:'even a powerful dragon can\'t suppress the local snake; outsiders can\'t easily dominate locals',con:'neu',reg:'cas',freq:'med',ety:'強龍(qiáng lóng) powerful dragon (outsider with power), 地頭蛇(dì tóu shé) local snake (those with home advantage). Even the most powerful outsider struggles against someone with deep local roots and knowledge.',comp:'強(qiáng strong) + 龍(lóng dragon) + 地頭(dìtóu local) + 蛇(shé snake)',ex:'這家外資企業進入中國市場後才發現，強龍不壓地頭蛇。',exen:'That foreign company entered the Chinese market only to discover that local players have the home advantage.',src:'class',tags:'idiom'},
+  {h:'成群結隊',p:'chéng qún jié duì',b:'ㄔㄥˊ ㄑㄩㄣˊ ㄐㄧㄝˊ ㄉㄨㄟˋ',e:'in groups; in a crowd; moving together as a group',con:'neu',reg:'cas',freq:'high',ety:'成群(chéng qún) forming groups, 結隊(jié duì) forming teams/lines. Groups forming and joining together — people or animals moving collectively.',comp:'成(chéng form) + 群(qún group) + 結(jié join) + 隊(duì team/line)',ex:'觀光客成群結隊地湧進這個小漁村。',exen:'Tourists flooded into the small fishing village in groups.',src:'class',tags:'idiom'},
+  {h:'紙醉金迷',p:'zhǐ zuì jīn mí',b:'ㄓˇ ㄗㄨㄟˋ ㄐㄧㄣ ㄇㄧˊ',e:'indulging in a life of luxury; dazzled by wealth and pleasure',con:'neg',reg:'for',freq:'med',ety:'紙醉(zhǐ zuì) drunk on paper (gold paper, lavish decorations), 金迷(jīn mí) entranced by gold. Intoxicated by extravagant surroundings — lost in luxury.',comp:'紙(zhǐ paper/gold paper) + 醉(zuì drunk) + 金(jīn gold) + 迷(mí entranced)',ex:'他在那段紙醉金迷的日子裡花光了所有積蓄。',exen:'He spent all his savings during that period of indulgent luxury.',src:'class',tags:'idiom'},
+  {h:'美中不足',p:'měi zhōng bù zú',b:'ㄇㄟˇ ㄓㄨㄥ ㄅㄨˋ ㄗㄨˊ',e:'the one flaw in an otherwise perfect thing; nearly perfect but with one shortcoming',con:'neg',reg:'cas',freq:'high',ety:'美中(měi zhōng) within beauty/perfection, 不足(bù zú) insufficient. Something that is generally beautiful but has an insufficiency within it.',comp:'美(měi beautiful/perfect) + 中(zhōng within) + 不(bù not) + 足(zú sufficient)',ex:'這份工作唯一美中不足的地方，就是通勤時間太長。',exen:'The only flaw in this otherwise great job is the commute is too long.',src:'class',tags:'idiom'},
+  {h:'大張旗鼓',p:'dà zhāng qí gǔ',b:'ㄉㄚˋ ㄓㄤ ㄑㄧˊ ㄍㄨˇ',e:'with great fanfare; making a big show; loudly and publicly',con:'neu',reg:'for',freq:'med',ety:'大張(dà zhāng) to spread out greatly, 旗鼓(qí gǔ) flags and drums. The flags and drums of an army on the move — making a big, visible, loud display.',comp:'大(dà big) + 張(zhāng spread out) + 旗(qí flag) + 鼓(gǔ drum)',ex:'公司大張旗鼓地宣布這次合作，結果三個月後就解散了。',exen:'The company announced the partnership with great fanfare — then dissolved it three months later.',src:'class',tags:'idiom'},
+  {h:'旗鼓相當',p:'qí gǔ xiāng dāng',b:'ㄑㄧˊ ㄍㄨˇ ㄒㄧㄤ ㄉㄤ',e:'evenly matched; on equal footing; well-matched competition',con:'neu',reg:'for',freq:'med',ety:'旗鼓(qí gǔ) flags and drums — the display of a military force, 相當(xiāng dāng) equivalent. Both armies displaying equal flags and drums — matched in strength.',comp:'旗(qí flag) + 鼓(gǔ drum) + 相當(xiāng dāng equivalent/matched)',ex:'這兩支球隊旗鼓相當，比賽一定很精彩。',exen:'These two teams are evenly matched — the game is going to be exciting.',src:'class',tags:'idiom'},
+  {h:'因禍得福',p:'yīn huò dé fú',b:'ㄧㄣ ㄏㄨㄛˋ ㄉㄜˊ ㄈㄨˊ',e:'blessing in disguise; to gain something good from a misfortune',con:'pos',reg:'cas',freq:'high',ety:'因禍(yīn huò) because of disaster, 得福(dé fú) gain fortune/blessing. Fortune that comes because of misfortune — the silver lining that only appears through adversity.',comp:'因(yīn because of) + 禍(huò disaster) + 得(dé gain) + 福(fú fortune/blessing)',ex:'被那家公司拒絕反而是因禍得福，因為她後來找到了更好的工作。',exen:'Getting rejected by that company was a blessing in disguise — she ended up finding a better job.',src:'class',tags:'idiom'},
+  {h:'加油添醋',p:'jiā yóu tiān cù',b:'ㄐㄧㄚ ㄧㄡˊ ㄊㄧㄢ ㄘㄨˋ',e:'to exaggerate; to embellish; to add spice to a story',con:'neg',reg:'cas',freq:'high',ety:'加油(jiā yóu) add oil, 添醋(tiān cù) add vinegar. Adding oil and vinegar to a story — seasoning it with exaggeration to make it more flavorful (and less truthful).',comp:'加(jiā add) + 油(yóu oil) + 添(tiān add more) + 醋(cù vinegar)',ex:'他說的事情本來不嚴重，但傳到最後加油添醋，變成大事了。',exen:'What he described wasn\'t serious, but by the time it spread it had been so embellished it became a big deal.',src:'class',tags:'idiom'},
+  {h:'一鼓作氣',p:'yī gǔ zuò qì',b:'ㄧ ㄍㄨˇ ㄗㄨㄛˋ ㄑㄧˋ',e:'to strike while the iron is hot; to complete something while momentum is strong',con:'pos',reg:'for',freq:'med',ety:'From the Zuo Zhuan: in battle, the first drum beat (一鼓) raises the troops\' spirit (作氣). If you delay, the energy dissipates. Do it now, in one burst of effort.',comp:'一(yī one/first) + 鼓(gǔ drum beat) + 作(zuò raise/generate) + 氣(qì spirit/energy)',ex:'既然已經開始了，就一鼓作氣把它完成，別拖拖拉拉。',exen:'Since you\'ve already started, finish it in one burst — don\'t drag it out.',src:'class',tags:'idiom'},
+  {h:'恍然大悟',p:'huǎng rán dà wù',b:'ㄏㄨㄤˇ ㄖㄢˊ ㄉㄚˋ ㄨˋ',e:'to suddenly realize; a moment of sudden understanding; eureka moment',con:'pos',reg:'cas',freq:'high',ety:'恍然(huǎng rán) suddenly as if a light came on, 大悟(dà wù) great awakening. The moment of sudden, complete understanding — like a light switching on.',comp:'恍(huǎng suddenly bright) + 然(rán so/thus) + 大(dà great) + 悟(wù awaken/understand)',ex:'她解釋完之後，我才恍然大悟，原來他一直在保護她。',exen:'After she explained it I suddenly understood — he had been protecting her all along.',src:'class',tags:'idiom'},
+  {h:'真相大白',p:'zhēn xiàng dà bái',b:'ㄓㄣ ㄒㄧㄤˋ ㄉㄚˋ ㄅㄞˊ',e:'when the truth is fully revealed; the full picture comes to light',con:'pos',reg:'for',freq:'med',ety:'真相(zhēn xiàng) the truth/real situation, 大白(dà bái) becomes completely clear/white. The truth becoming completely bright and visible — no more shadows.',comp:'真(zhēn true/real) + 相(xiàng situation/appearance) + 大(dà completely) + 白(bái white/clear)',ex:'案子調查了兩年，終於真相大白。',exen:'After two years of investigation the truth finally came to light.',src:'class',tags:'idiom'},
+  {h:'神龍見首不見尾',p:'shén lóng jiàn shǒu bú jiàn wěi',b:'ㄕㄣˊ ㄌㄨㄥˊ ㄐㄧㄢˋ ㄕㄡˇ ㄅㄨˊ ㄐㄧㄢˋ ㄨㄟˇ',e:'elusive and mysterious; appearing briefly then vanishing',con:'neu',reg:'cas',freq:'low',ety:'A divine dragon (神龍) that you can see the head of but never the tail — so vast and mysterious that you can never take it all in. Used for elusive, hard-to-pin-down people.',comp:'神(shén divine) + 龍(lóng dragon) + 見首(jiàn shǒu see head) + 不見尾(bú jiàn wěi not see tail)',ex:'她的老闆神龍見首不見尾，大家都不知道他的想法。',exen:'Her boss is impossibly elusive — nobody ever knows what he\'s thinking.',src:'class',tags:'idiom'},
+  {h:'塞翁失馬',p:'sài wēng shī mǎ',b:'ㄙㄞˋ ㄨㄥ ㄕ ㄇㄚˇ',e:'a blessing in disguise; misfortune and fortune are intertwined',con:'neu',reg:'for',freq:'med',ety:'From the Huainanzi: an old man near the frontier (塞翁) lost his horse (失馬). His neighbors commiserated but he said — how do you know this isn\'t good fortune? The horse returned with a wild horse. Then his son broke his leg riding it. Then war came and his son survived because of the injury. Fortune and misfortune are always turning.',comp:'塞(sài frontier/border) + 翁(wēng old man) + 失(shī lose) + 馬(mǎ horse)',ex:'塞翁失馬，焉知非福——失去那個機會，也許是件好事。',exen:'Misfortune may be a blessing — losing that opportunity might be a good thing.',src:'class',tags:'idiom'},
+  {h:'言聽計從',p:'yán tīng jì cóng',b:'ㄧㄢˊ ㄊㄧㄥ ㄐㄧˋ ㄘㄨㄥˊ',e:'to always follow someone\'s advice; to have complete trust in someone\'s judgment',con:'neu',reg:'for',freq:'med',ety:'言(yán) words/advice, 聽(tīng) listen to, 計(jì) plans/strategies, 從(cóng) follow. Listening to every word and following every plan — complete deference.',comp:'言(yán words/advice) + 聽(tīng listen) + 計(jì plan/strategy) + 從(cóng follow)',ex:'她對她的導師言聽計從，幾乎不質疑他的建議。',exen:'She followed her mentor\'s advice without question — barely ever challenging his suggestions.',src:'class',tags:'idiom'},
+  {h:'不拘小節',p:'bù jū xiǎo jié',b:'ㄅㄨˋ ㄐㄩ ㄒㄧㄠˇ ㄐㄧㄝˊ',e:'not fussy about details; easygoing; low maintenance',con:'pos',reg:'cas',freq:'high',ety:'不拘(bù jū) not restricted by, 小節(xiǎo jié) small details/minor formalities. Not caught up in small details — someone relaxed about the little things.',comp:'不(bù not) + 拘(jū restrained/caught) + 小(xiǎo small) + 節(jié detail/formality)',ex:'他這個人不拘小節，跟誰都能相處得很好。',exen:'He\'s easygoing about the details — he gets along well with everyone.',src:'class',tags:'idiom'},
+  {h:'杞人憂天',p:'qǐ rén yōu tiān',b:'ㄑㄧˇ ㄖㄣˊ ㄧㄡ ㄊㄧㄢ',e:'to worry needlessly; paranoid about things that won\'t happen',con:'neg',reg:'cas',freq:'med',ety:'From Liezi: a man from the state of Qi (杞人) worried (憂) that the sky (天) might fall. His friends tried to reassure him. Now used for excessive, irrational worry about unlikely disasters.',comp:'杞(qǐ name of ancient state) + 人(rén person) + 憂(yōu worry) + 天(tiān sky/heaven)',ex:'你不用這麼杞人憂天，這個計畫沒有你想的那麼危險。',exen:'You don\'t need to worry so much about nothing — this plan isn\'t as risky as you think.',src:'class',tags:'idiom'},
+  {h:'游刃有餘',p:'yóu rèn yǒu yú',b:'ㄧㄡˊ ㄖㄣˋ ㄧㄡˇ ㄩˊ',e:'to handle something with ease; more than capable; room to spare',con:'pos',reg:'for',freq:'high',ety:'From Zhuangzi\'s story of a master butcher: his knife (刃) moved through the ox with ease (游) and never wore down because it found the natural spaces. Having skill so deep that you move through challenges effortlessly.',comp:'游(yóu move freely) + 刃(rèn blade/knife) + 有(yǒu have) + 餘(yú surplus/spare)',ex:'她對這種報告駕輕就熟，處理起來游刃有餘。',exen:'She handles this type of report with complete ease — more than capable.',src:'class',tags:'idiom'},
+  {h:'從容不迫',p:'cóng róng bù pò',b:'ㄘㄨㄥˊ ㄖㄨㄥˊ ㄅㄨˋ ㄆㄛˋ',e:'calm and unhurried; composed; taking things in stride',con:'pos',reg:'for',freq:'high',ety:'從容(cóng róng) at ease/leisurely, 不迫(bù pò) not pressed/not rushed. Completely at ease, feeling no urgency or pressure.',comp:'從容(cóng róng at ease) + 不(bù not) + 迫(pò pressed/urgent)',ex:'他面對記者的提問從容不迫，每個回答都很有條理。',exen:'He handled the reporters\' questions with complete composure — every answer was measured and clear.',src:'class',tags:'idiom'},
+  // NEW VOCAB FROM HOMEWORK
+  {h:'恰到好處',p:'qià dào hǎo chù',b:'ㄑㄧㄚˋ ㄉㄠˋ ㄏㄠˇ ㄔㄨˋ',e:'just right; perfectly appropriate; hitting exactly the right note',con:'pos',reg:'for',freq:'high',ety:'恰(qià) exactly/just, 到(dào) arrive at/reach, 好處(hǎo chù) the good point/right place. Arriving at exactly the right spot — not too much, not too little.',comp:'恰(qià exactly) + 到(dào reach/arrive) + 好(hǎo good/right) + 處(chù place/point)',ex:'她的回應恰到好處，既沒有太客氣也沒有太冷淡。',exen:'Her response was exactly right — not too polite, not too cold.',src:'class',tags:''},
+  {h:'拿捏',p:'nā niē',b:'ㄋㄚ ㄋㄧㄝ',e:'to manage carefully; to calibrate; to keep under control; in the palm of your hand',con:'neu',reg:'cas',freq:'high',ety:'拿(ná) to hold/grasp, 捏(niē) to pinch/squeeze. Holding something in your hand while pinching it to feel its weight and texture — the sense of carefully managing something delicate.',comp:'拿(ná grasp/hold) + 捏(niē pinch/squeeze)',ex:'在工作和生活之間拿捏平衡，一直是她最大的挑戰。',exen:'Calibrating the balance between work and life has always been her biggest challenge.',src:'class',tags:''},
+  {h:'現成',p:'xiànchéng',b:'ㄒㄧㄢˋ ㄔㄥˊ',e:'ready-made; off the shelf; already available',con:'neu',reg:'cas',freq:'high',ety:'現(xiàn) means present/already existing, 成(chéng) means completed/finished. Already finished and present — ready to use without making it yourself.',comp:'現(xiàn present/existing) + 成(chéng completed/finished)',ex:'她剛搬進去，家裡都是現成家具，省了很多事。',exen:'She just moved in — the place came with ready-made furniture, which saved a lot of hassle.',src:'class',tags:''},
+  {h:'節省開銷',p:'jiéshěng kāixiāo',b:'ㄐㄧㄝˊ ㄕㄥˇ ㄎㄞ ㄒㄧㄠ',e:'to cut expenses; to save money on spending',con:'neu',reg:'for',freq:'high',ety:'節省(jiéshěng) to economize/save, 開銷(kāixiāo) expenses/outgoings. Economizing on what goes out the door — controlling spending.',comp:'節(jié regulate/restrain) + 省(shěng save) + 開(kāi open/outgoing) + 銷(xiāo spend/consume)',ex:'剛創業的時候，一定要學會節省開銷，否則很快就會燒光資金。',exen:'When you first start a business you have to learn to cut expenses or you\'ll burn through funding fast.',src:'class',tags:'business'},
+  {h:'突破傳統',p:'tūpò chuántǒng',b:'ㄊㄨ ㄆㄛˋ ㄔㄨㄢˊ ㄊㄨㄥˇ',e:'to break through tradition; to innovate beyond convention',con:'pos',reg:'for',freq:'med',ety:'突破(tūpò) to break through/surpass, 傳統(chuántǒng) tradition. Breaking through what has been passed down — innovation that defies convention.',comp:'突(tū sudden/break through) + 破(pò break) + 傳(chuán pass down) + 統(tǒng system/tradition)',ex:'這位設計師的作品大膽突破傳統，讓整個業界都為之震驚。',exen:'This designer\'s work boldly broke with tradition, shocking the whole industry.',src:'class',tags:'business'},
+  {h:'中意',p:'zhōngyì',b:'ㄓㄨㄥˋ ㄧˋ',e:'to be satisfied with; to like; a good fit (between liking and loving)',con:'pos',reg:'cas',freq:'high',ety:'中(zhòng) to hit the mark/be right for, 意(yì) feelings/meaning. Hitting exactly what your feelings wanted — a match.',comp:'中(zhòng hit the mark) + 意(yì feelings/intention)',ex:'她面試了很多候選人，終於找到一個她真的很中意的。',exen:'She interviewed many candidates and finally found one she was truly satisfied with.',src:'class',tags:''},
+  {h:'指點',p:'zhǐdiǎn',b:'ㄓˇ ㄉㄧㄢˇ',e:'to give guidance; to point someone in the right direction; mentorship',con:'pos',reg:'for',freq:'high',ety:'指(zhǐ) to point with a finger, 點(diǎn) to touch/indicate. Pointing and indicating — directing someone toward the right path.',comp:'指(zhǐ point/finger) + 點(diǎn touch/indicate)',ex:'她非常感謝當年老師的指點，讓她找到了自己的方向。',exen:'She\'s deeply grateful for her teacher\'s guidance that helped her find her direction.',src:'class',tags:''},
+  {h:'紅人',p:'hóngrén',b:'ㄏㄨㄥˊ ㄖㄣˊ',e:'a popular person; someone in favor; the office favorite',con:'pos',reg:'cas',freq:'high',ety:'紅(hóng) red — in Chinese culture, red is lucky, celebrated, and prominent. 人(rén) person. The red person — someone who is celebrated and in favor.',comp:'紅(hóng red/favored) + 人(rén person)',ex:'她剛加入公司半年，已經成為老闆眼中的紅人。',exen:'She\'d only been at the company six months and was already the boss\'s favorite.',src:'class',tags:''},
+  {h:'心力交瘁',p:'xīn lì jiāo cuì',b:'ㄒㄧㄣ ㄌㄧˋ ㄐㄧㄠ ㄘㄨㄟˋ',e:'mentally and physically exhausted; drained of all energy',con:'neg',reg:'for',freq:'high',ety:'心力(xīn lì) heart-strength — both mental and physical energy, 交瘁(jiāo cuì) exhausted together. Both your heart and your strength are exhausted at the same time.',comp:'心(xīn heart/mind) + 力(lì strength/energy) + 交(jiāo together/mutually) + 瘁(cuì exhausted/worn out)',ex:'照顧病人三個月後，她已經心力交瘁，需要好好休息。',exen:'After three months of caring for the patient she was completely drained — she needed a good rest.',src:'class',tags:''},
+  {h:'怪不得',p:'guàibùdé',b:'ㄍㄨㄞˋ ㄅㄨˋ ㄉㄜ',e:'no wonder; that\'s why; so that\'s the reason',con:'neu',reg:'cas',freq:'high',ety:'怪(guài) to find strange/blame, 不得(bùdé) cannot. You can\'t blame or find it strange — it makes sense now. The classic "ah, that explains it" expression.',comp:'怪(guài find strange/blame) + 不(bù not) + 得(dé can/able)',ex:'怪不得她今天心情這麼好，原來是升職了。',exen:'No wonder she\'s in such a good mood today — she got promoted.',src:'class',tags:'connector'},
+  {h:'共事',p:'gòngshì',b:'ㄍㄨㄥˋ ㄕˋ',e:'to work together; to collaborate; to be colleagues',con:'neu',reg:'for',freq:'high',ety:'共(gòng) together/jointly, 事(shì) affairs/work. Working on things together — to be colleagues or collaborators.',comp:'共(gòng together/jointly) + 事(shì affairs/work)',ex:'我跟她共事了三年，她是我見過最有效率的同事。',exen:'I worked with her for three years — she\'s the most efficient colleague I\'ve ever had.',src:'class',tags:'business'},
+  {h:'領悟力',p:'lǐngwùlì',b:'ㄌㄧㄥˇ ㄨˋ ㄌㄧˋ',e:'ability to understand and grasp things quickly; perceptiveness',con:'pos',reg:'for',freq:'med',ety:'領悟(lǐngwù) to comprehend/grasp, 力(lì) ability/power. The power to grasp meaning quickly — intuitive understanding.',comp:'領(lǐng lead/grasp) + 悟(wù awaken/understand) + 力(lì ability/power)',ex:'她的領悟力很強，老師只說一遍她就能完全理解。',exen:'Her ability to grasp things quickly is impressive — the teacher only needs to say it once.',src:'class',tags:''},
+  {h:'藉口',p:'jièkǒu',b:'ㄐㄧㄝˋ ㄎㄡˇ',e:'excuse; pretext; justification',con:'neg',reg:'cas',freq:'high',ety:'藉(jiè) means to use/rely on, 口(kǒu) means mouth/words. Using words as a prop — an excuse you use to justify yourself.',comp:'藉(jiè use/rely on) + 口(kǒu mouth/words)',ex:'他一直找藉口不去看醫生，最後病情加重了。',exen:'He kept making excuses not to see the doctor and his condition got worse.',src:'class',tags:''},
+  {h:'騎驢找馬',p:'qí lǘ zhǎo mǎ',b:'ㄑㄧˊ ㄌㄩˊ ㄓㄠˇ ㄇㄚˇ',e:'to ride a donkey while looking for a horse; to keep your current job while searching for a better one',con:'pos',reg:'cas',freq:'high',ety:'騎驢(qí lǘ) riding a donkey, 找馬(zhǎo mǎ) looking for a horse. A donkey is adequate but a horse is better — don\'t quit the donkey until you\'ve found the horse.',comp:'騎(qí ride) + 驢(lǘ donkey) + 找(zhǎo look for) + 馬(mǎ horse)',ex:'在找到新工作之前，她決定騎驢找馬，先繼續現在的職位。',exen:'Before finding a new job she decided to keep her current position while looking — ride the donkey while searching for a horse.',src:'class',tags:'idiom business'},
+  {h:'裸辭',p:'luǒcí',b:'ㄌㄨㄛˇ ㄘˊ',e:'to quit without another job lined up; to resign bare (with no safety net)',con:'neg',reg:'cas',freq:'high',ety:'裸(luǒ) naked/bare, 辭(cí) to resign. Resigning while naked — without the safety net of another job to land in.',comp:'裸(luǒ naked/bare) + 辭(cí resign)',ex:'她裸辭了，準備花幾個月的時間好好思考下一步。',exen:'She quit without a job lined up and planned to spend a few months thinking through her next move.',src:'class',tags:'business slang'},
+  {h:'循序漸進',p:'xúnxù jiànjìn',b:'ㄒㄩㄣˊ ㄒㄩˋ ㄐㄧㄢˋ ㄐㄧㄣˋ',e:'step by step; progressing gradually; following the proper sequence',con:'pos',reg:'for',freq:'high',ety:'循序(xúnxù) following the order/sequence, 漸進(jiànjìn) progressing gradually. Following the order and advancing step by step — the proper, measured pace of learning or growth.',comp:'循(xún follow) + 序(xù order/sequence) + 漸(jiàn gradually) + 進(jìn advance)',ex:'學語言不能急，要循序漸進，慢慢累積才能進步。',exen:'You can\'t rush language learning — you have to progress step by step and accumulate gradually.',src:'class',tags:''},
+  {h:'冥想',p:'míngxiǎng',b:'ㄇㄧㄥˊ ㄒㄧㄤˇ',e:'meditation; to meditate',con:'pos',reg:'cas',freq:'high',ety:'冥(míng) means deep/dark/profound (the deep, quiet state), 想(xiǎng) means to think. Deep, profound thinking — the state of meditation.',comp:'冥(míng deep/profound/dark) + 想(xiǎng think)',ex:'她每天早上花十分鐘冥想，幫助自己專注。',exen:'She spends ten minutes meditating every morning to help herself focus.',src:'class',tags:''},
+  {h:'瓶頸',p:'píngjǐng',b:'ㄆㄧㄥˊ ㄐㄧㄥˇ',e:'bottleneck; a point of congestion or difficulty',con:'neg',reg:'for',freq:'high',ety:'瓶(píng) bottle, 頸(jǐng) neck. The neck of a bottle — where flow narrows and slows. A bottleneck in a process or career.',comp:'瓶(píng bottle) + 頸(jǐng neck)',ex:'團隊目前遇到了技術上的瓶頸，需要找外部專家協助。',exen:'The team has hit a technical bottleneck and needs outside expertise.',src:'class',tags:'business'},
+  // PATTERNS
+  {h:'與其A不如B',p:'yǔqí A bùrú B',b:'ㄩˇ ㄑㄧˊ ... ㄅㄨˋ ㄖㄨˊ ...',e:'Rather than A, it\'s better to do B',con:'neu',reg:'for',freq:'high',ety:'',comp:'',ex:'與其在家抱怨，不如出去行動。 / Rather than sitting home complaining, better to go out and do something.',exen:'',src:'class',tags:'pattern'},
+  {h:'難道',p:'nándào',b:'ㄋㄢˊ ㄉㄠˋ',e:'Don\'t tell me that...? Surely not...? (rhetorical)',con:'neu',reg:'cas',freq:'high',ety:'',comp:'',ex:'難道你真的不知道他喜歡你嗎？ / Don\'t tell me you really didn\'t know he likes you?',exen:'',src:'class',tags:'pattern connector'},
+  {h:'畢竟',p:'bìjìng',b:'ㄅㄧˋ ㄐㄧㄥˋ',e:'after all; when all is said and done',con:'neu',reg:'cas',freq:'high',ety:'',comp:'',ex:'別太苛求自己，畢竟這是你第一次嘗試。 / Don\'t be too hard on yourself — after all, it\'s your first try.',exen:'',src:'class',tags:'pattern connector'},
+  {h:'隨著',p:'suízhe',b:'ㄙㄨㄟˊ ㄓㄜ',e:'along with; as something develops; following',con:'neu',reg:'for',freq:'high',ety:'',comp:'',ex:'隨著科技進步，很多傳統工作都消失了。 / As technology advanced, many traditional jobs disappeared.',exen:'',src:'class',tags:'pattern connector'},
+  {h:'由於',p:'yóuyú',b:'ㄧㄡˊ ㄩˊ',e:'due to; because of; owing to (formal)',con:'neu',reg:'for',freq:'high',ety:'',comp:'',ex:'由於天氣惡劣，航班被迫取消。 / Due to severe weather, the flight was cancelled.',exen:'',src:'class',tags:'pattern connector'},
+  {h:'即使',p:'jíshǐ',b:'ㄐㄧˊ ㄕˇ',e:'even if; even though',con:'neu',reg:'for',freq:'high',ety:'',comp:'',ex:'即使失敗了，也要從中學習。 / Even if you fail, learn from it.',exen:'',src:'class',tags:'pattern connector'},
+  {h:'不但...而且',p:'bùdàn...érqiě',b:'ㄅㄨˋ ㄉㄢˋ ... ㄦˊ ㄑㄧㄝˇ',e:'not only...but also',con:'pos',reg:'cas',freq:'high',ety:'',comp:'',ex:'她不但工作認真，而且待人非常親切。 / She is not only hardworking but also very kind to people.',exen:'',src:'class',tags:'pattern connector'},
+  {h:'儘管',p:'jǐnguǎn',b:'ㄐㄧㄣˇ ㄍㄨㄢˇ',e:'even though; despite; although',con:'neu',reg:'for',freq:'high',ety:'',comp:'',ex:'儘管她很累，還是堅持完成了報告。 / Even though she was exhausted, she still finished the report.',exen:'',src:'class',tags:'pattern connector'},
+  // KEEP remaining original words that were in earlier versions
+  {h:'最終',p:'zuìzhōng',b:'ㄗㄨㄟˋ ㄓㄨㄥ',e:'ultimately; in the end; finally',con:'neu',reg:'for',freq:'high',ety:'最(zuì) most/extreme, 終(zhōng) end. The most final ending — ultimately.',comp:'最(zuì most/extreme) + 終(zhōng end)',ex:'最終，她還是決定接受那份工作。',exen:'Ultimately she decided to accept the job.',src:'class',tags:'connector'},
+  {h:'雖然',p:'suīrán',b:'ㄙㄨㄟ ㄖㄢˊ',e:'although; even though',con:'neu',reg:'cas',freq:'high',ety:'雖(suī) even though, 然(rán) so/thus. Conjunction for contrast.',comp:'雖(suī although) + 然(rán so)',ex:'雖然很累，她還是去了健身房。',exen:'Although she was tired, she still went to the gym.',src:'class',tags:'connector pattern'},
+  {h:'因此',p:'yīncǐ',b:'ㄧㄣ ㄘˇ',e:'therefore; as a result; consequently',con:'neu',reg:'for',freq:'high',ety:'因(yīn) because/cause, 此(cǐ) this. Because of this — therefore.',comp:'因(yīn cause/because) + 此(cǐ this)',ex:'她準備充分，因此面試表現得非常好。',exen:'She prepared thoroughly; therefore her interview went very well.',src:'class',tags:'connector'},
+  {h:'不過',p:'búguò',b:'ㄅㄨˊ ㄍㄨㄛˋ',e:'however; but; yet (softer than 但是)',con:'neu',reg:'cas',freq:'high',ety:'不(bù) not, 過(guò) pass/exceed. Not exceeding — a soft "but" that acknowledges the previous point before adding contrast.',comp:'不(bù not) + 過(guò pass/exceed)',ex:'他說得很有道理，不過我還是有一些疑問。',exen:'What he said made good sense, however I still have some doubts.',src:'class',tags:'connector'},
+  {h:'山珍海味',p:'shān zhēn hǎi wèi',b:'ㄕㄢ ㄓㄣ ㄏㄞˇ ㄨㄟˋ',e:'exotic delicacies; the finest food from mountains and sea',con:'pos',reg:'for',freq:'med',ety:'山珍(shān zhēn) treasures from the mountain, 海味(hǎi wèi) flavors from the sea. The best and rarest ingredients from land and sea — a feast of exotic delicacies.',comp:'山(shān mountain) + 珍(zhēn treasure/precious) + 海(hǎi sea) + 味(wèi flavor/taste)',ex:'這家餐廳專門提供山珍海味，是招待貴賓的首選。',exen:'This restaurant specializes in exotic delicacies — the top choice for entertaining VIPs.',src:'class',tags:'idiom food'},
+,
+  {h:'壓縮',p:'yāsuō',b:'ㄧㄚ ㄙㄨㄛ',e:'to compress; to stack; to condense',con:'neu',reg:'for',freq:'high',ety:'壓(yā) press down + 縮(suō) shrink. Pressing and shrinking together — compression.',comp:'壓(yā press) + 縮(suō shrink)',ex:'把行程壓縮到三天，雖然很累但效率很高。',exen:'Compressing the schedule into three days was exhausting but very efficient.',src:'class',tags:'business'},
+  {h:'能免則免',p:'néng miǎn zé miǎn',b:'ㄋㄥˊ ㄇㄧㄢˇ ㄗㄜˊ ㄇㄧㄢˇ',e:'if you can avoid it, avoid it; minimize where possible',con:'neu',reg:'cas',freq:'med',ety:'能(néng) can + 免(miǎn) avoid + 則(zé) then + 免(miǎn) avoid. If avoidable, avoid it — a practical philosophy of minimizing unnecessary effort or risk.',comp:'能(néng can) + 免(miǎn avoid) + 則(zé then) + 免(miǎn avoid)',ex:'開會能免則免，有事情直接傳訊息就好。',exen:'Avoid meetings if you can — just send a message if something comes up.',src:'class',tags:''},
+  {h:'靈魂',p:'línghún',b:'ㄌㄧㄥˊ ㄏㄨㄣˊ',e:'soul; spirit; essence',con:'pos',reg:'cas',freq:'high',ety:'靈(líng) spirit/magical + 魂(hún) soul. The spiritual essence that animates a person.',comp:'靈(líng spirit) + 魂(hún soul)',ex:'她說音樂是她的靈魂，沒有音樂就活不下去。',exen:'She says music is her soul — she can\'t live without it.',src:'class',tags:''},
+  {h:'發炎',p:'fāyán',b:'ㄈㄚ ㄧㄢˊ',e:'inflammation; to become inflamed',con:'neg',reg:'cas',freq:'high',ety:'發(fā) to emit/break out + 炎(yán) flame/heat. Breaking out in heat — inflammation.',comp:'發(fā emit/break out) + 炎(yán flame/heat)',ex:'她的喉嚨發炎了，講話很不舒服。',exen:'Her throat is inflamed — it\'s very uncomfortable to speak.',src:'class',tags:''},
+  {h:'自體免疫',p:'zìtǐ miǎnyì',b:'ㄗˋ ㄊㄧˇ ㄇㄧㄢˇ ㄧˋ',e:'autoimmune',con:'neu',reg:'for',freq:'low',ety:'自體(zìtǐ) self-body + 免疫(miǎnyì) immunity. The immune system attacking the self.',comp:'自(zì self) + 體(tǐ body) + 免(miǎn avoid) + 疫(yì epidemic/immune)',ex:'她被診斷出有自體免疫疾病，需要長期治療。',exen:'She was diagnosed with an autoimmune condition requiring long-term treatment.',src:'class',tags:''},
+  {h:'動力',p:'dònglì',b:'ㄉㄨㄥˋ ㄌㄧˋ',e:'motivation; drive; willpower; engine force',con:'pos',reg:'cas',freq:'high',ety:'動(dòng) move + 力(lì) power. The power that moves you — motivation or engine power.',comp:'動(dòng move) + 力(lì power)',ex:'最近工作上遇到瓶頸，感覺完全失去動力了。',exen:'I\'ve hit a wall at work lately and feel like I\'ve completely lost my drive.',src:'class',tags:''},
+  {h:'可靠',p:'kěkào',b:'ㄎㄜˇ ㄎㄠˋ',e:'reliable; trustworthy; dependable',con:'pos',reg:'cas',freq:'high',ety:'可(kě) can/worth + 靠(kào) lean on/rely on. Worth leaning on — reliable.',comp:'可(kě worthy of) + 靠(kào lean on/rely)',ex:'她是我見過最可靠的同事，從來不讓人失望。',exen:'She\'s the most reliable colleague I\'ve ever had — she never lets anyone down.',src:'class',tags:''},
+  {h:'複製',p:'fùzhì',b:'ㄈㄨˋ ㄓˋ',e:'to copy; to duplicate; to replicate',con:'neu',reg:'for',freq:'high',ety:'複(fù) repeat/double + 製(zhì) make/produce. Making a double — copying or replicating.',comp:'複(fù repeat/double) + 製(zhì make)',ex:'這個商業模式很難複製，因為它非常依賴創辦人的個人關係。',exen:'This business model is hard to replicate because it depends heavily on the founder\'s personal relationships.',src:'class',tags:'business'},
+  {h:'亂七八糟',p:'luàn qī bā zāo',b:'ㄌㄨㄢˋ ㄑㄧ ㄅㄚ ㄗㄠ',e:'a complete mess; all over the place; chaotic',con:'neg',reg:'cas',freq:'high',ety:'Seven and eight (七八) scattered in chaos (亂) and disorder (糟). Numbers used to suggest randomness — everything is everywhere.',comp:'亂(luàn chaotic) + 七(qī seven) + 八(bā eight) + 糟(zāo messy/rotten)',ex:'她的房間亂七八糟，根本找不到任何東西。',exen:'Her room is an absolute mess — you can\'t find anything in there.',src:'class',tags:''},
+  {h:'精神不寧',p:'jīngshén bùníng',b:'ㄐㄧㄥ ㄕㄣˊ ㄅㄨˋ ㄋㄧㄥˊ',e:'frazzled; mentally unsettled; restless and anxious',con:'neg',reg:'for',freq:'med',ety:'精神(jīngshén) spirit/mental state + 不(bù) not + 寧(níng) peaceful/settled. A spirit that cannot find peace — frazzled.',comp:'精神(jīngshén spirit) + 不(bù not) + 寧(níng peaceful)',ex:'連續熬夜趕報告，讓她整個人精神不寧。',exen:'Pulling all-nighters to finish the report left her completely frazzled.',src:'class',tags:''},
+  {h:'磁場',p:'cíchǎng',b:'ㄘˊ ㄔㄤˇ',e:'vibe; energy; magnetic field',con:'neu',reg:'cas',freq:'high',ety:'磁(cí) magnetic + 場(chǎng) field. Literally a magnetic field — now widely used in Taiwanese slang for the energy or vibe someone gives off.',comp:'磁(cí magnetic) + 場(chǎng field)',ex:'他這個人磁場很好，跟誰都能快速建立信任。',exen:'He has great energy — he can quickly build trust with anyone.',src:'class',tags:'slang'},
+  {h:'魅力',p:'mèilì',b:'ㄇㄟˋ ㄌㄧˋ',e:'charisma; charm; appeal',con:'pos',reg:'cas',freq:'high',ety:'魅(mèi) enchanting spirit/charm + 力(lì) power. The power of enchantment — charisma.',comp:'魅(mèi enchanting charm) + 力(lì power)',ex:'她的魅力在於她能讓每個人都覺得被重視。',exen:'Her charm lies in her ability to make everyone feel valued.',src:'class',tags:''},
+  {h:'趨勢',p:'qūshì',b:'ㄑㄩ ㄕˋ',e:'trend; tendency; trajectory',con:'neu',reg:'for',freq:'high',ety:'趨(qū) move toward/tend toward + 勢(shì) momentum/force. The momentum moving in a direction — a trend.',comp:'趨(qū tend toward) + 勢(shì momentum/force)',ex:'她的工作就是分析市場趨勢，幫公司做長期規劃。',exen:'Her job is to analyze market trends and help the company plan long-term.',src:'class',tags:'business'},
+  {h:'假設',p:'jiǎshè',b:'ㄐㄧㄚˇ ㄕㄜˋ',e:'hypothesis; assumption; to assume',con:'neu',reg:'for',freq:'high',ety:'假(jiǎ) temporary/assumed + 設(shè) set up/establish. Setting up a temporary premise — a hypothesis or assumption.',comp:'假(jiǎ assumed/temporary) + 設(shè set up)',ex:'我們的假設是用戶願意為更好的體驗付費，但數據不支持。',exen:'Our assumption was that users would pay for a better experience, but the data doesn\'t support it.',src:'class',tags:'business'},
+  {h:'待辦',p:'dàibàn',b:'ㄉㄞˋ ㄅㄢˋ',e:'to-do; pending task; awaiting action',con:'neu',reg:'cas',freq:'high',ety:'待(dài) waiting + 辦(bàn) handle/do. Waiting to be handled — a to-do item.',comp:'待(dài wait) + 辦(bàn handle/do)',ex:'她的待辦清單越來越長，每天都有做不完的事。',exen:'Her to-do list keeps growing — there\'s always more to do every day.',src:'class',tags:'business'},
+  {h:'待業',p:'dàiyè',b:'ㄉㄞˋ ㄧㄝˋ',e:'unemployed; between jobs; waiting for work',con:'neg',reg:'for',freq:'high',ety:'待(dài) waiting + 業(yè) career/industry. Waiting for a career — unemployed or between jobs.',comp:'待(dài wait) + 業(yè career/work)',ex:'她待業了三個月，這段時間用來充電和思考方向。',exen:'She was between jobs for three months and used the time to recharge and reflect.',src:'class',tags:'business'},
+  {h:'近期目標',p:'jìnqī mùbiāo',b:'ㄐㄧㄣˋ ㄑㄧ ㄇㄨˋ ㄅㄧㄠ',e:'near-term goal; short-term objective',con:'pos',reg:'for',freq:'high',ety:'近期(jìnqī) near-term + 目標(mùbiāo) goal/target. A target set for the near future.',comp:'近(jìn near) + 期(qī period) + 目(mù eye/aim) + 標(biāo mark/target)',ex:'先設定近期目標，才能一步一步達到長遠的夢想。',exen:'Set near-term goals first — that\'s how you reach long-term dreams step by step.',src:'class',tags:'business'},
+  {h:'自我分化',p:'zìwǒ fēnhuà',b:'ㄗˋ ㄨㄛˇ ㄈㄣ ㄏㄨㄚˋ',e:'differentiation of self; emotional independence from family system',con:'neu',reg:'for',freq:'low',ety:'From Bowen Family Systems theory. 自我(zìwǒ) self + 分化(fēnhuà) differentiate. The ability to maintain your own identity and emotional functioning separate from family emotional pressures.',comp:'自我(zìwǒ self) + 分化(fēnhuà differentiate)',ex:'自我分化程度越高，在家庭衝突中越能保持冷靜理性。',exen:'The higher your level of self-differentiation, the calmer you can stay during family conflict.',src:'class',tags:'psychology'},
+  {h:'情緒系統',p:'qíngxù xìtǒng',b:'ㄑㄧㄥˊ ㄒㄩˋ ㄒㄧˋ ㄊㄨㄥˇ',e:'emotional system (Bowen theory)',con:'neu',reg:'for',freq:'low',ety:'Bowen Family Systems term. The network of emotional connections and reactions within a family or group that operates almost like a biological system.',comp:'情緒(qíngxù emotion) + 系統(xìtǒng system)',ex:'家庭的情緒系統會影響每一個成員的行為模式。',exen:'The family emotional system influences the behavior patterns of every member.',src:'class',tags:'psychology'},
+  {h:'三角關係',p:'sānjiǎo guānxi',b:'ㄙㄢ ㄐㄧㄠˇ ㄍㄨㄢ ㄒㄧ',e:'emotional triangle; three-way relationship dynamic',con:'neg',reg:'cas',freq:'med',ety:'In Bowen theory: when two-person tension gets too high, a third person is pulled in to stabilize — creating a triangle. Also used for romantic triangles.',comp:'三(sān three) + 角(jiǎo angle/corner) + 關係(guānxi relationship)',ex:'職場中常常出現三角關係，導致資訊傳遞不透明。',exen:'Triangles often emerge in the workplace, making information flow murky.',src:'class',tags:'psychology'},
+  {h:'巧勁',p:'qiǎojìn',b:'ㄑㄧㄠˇ ㄐㄧㄣˋ',e:'working smart; using technique and leverage rather than brute force',con:'pos',reg:'cas',freq:'med',ety:'巧(qiǎo) skillful/clever + 勁(jìn) force/energy. Clever force — the kind of effort that uses skill and positioning rather than just grinding harder.',comp:'巧(qiǎo clever/skillful) + 勁(jìn force/energy)',ex:'光靠勤奮不夠，還要懂得用巧勁，才能事半功倍。',exen:'Hard work alone isn\'t enough — you also need to work smart to get twice the results with half the effort.',src:'class',tags:'business'},
+  {h:'事半功倍',p:'shì bàn gōng bèi',b:'ㄕˋ ㄅㄢˋ ㄍㄨㄥ ㄅㄟˋ',e:'half the effort, twice the result; maximum efficiency',con:'pos',reg:'for',freq:'high',ety:'事半(shì bàn) half the work + 功倍(gōng bèi) double the achievement. A classical ideal of efficiency — doing less and getting more.',comp:'事(shì work/effort) + 半(bàn half) + 功(gōng achievement) + 倍(bèi double)',ex:'找到正確的方法，才能事半功倍，不用白費力氣。',exen:'Find the right approach and you\'ll get twice the results with half the effort.',src:'class',tags:'idiom business'},
+  {h:'槓桿效應',p:'gànggǎn xiàoyìng',b:'ㄍㄤˋ ㄍㄢˇ ㄒㄧㄠˋ ㄧㄥˋ',e:'leverage effect; getting outsized results from small inputs',con:'pos',reg:'for',freq:'med',ety:'槓桿(gànggǎn) lever + 效應(xiàoyìng) effect. The lever effect — a small input creating a much larger output, like a physical lever multiplying force.',comp:'槓(gàng lever/pole) + 桿(gǎn rod/handle) + 效(xiào effect) + 應(yìng response)',ex:'人脈就是一種槓桿效應，認識對的人可以讓機會倍增。',exen:'Networking is a leverage effect — knowing the right people can multiply opportunities.',src:'class',tags:'business'},
+  {h:'結果導向',p:'jiéguǒ dǎoxiàng',b:'ㄐㄧㄝˊ ㄍㄨㄛˇ ㄉㄠˇ ㄒㄧㄤˋ',e:'outcome-oriented; results-driven',con:'pos',reg:'for',freq:'high',ety:'結果(jiéguǒ) result/outcome + 導向(dǎoxiàng) oriented toward. Pointed at the result — measuring success by outcomes not effort.',comp:'結果(jiéguǒ result) + 導(dǎo guide/orient) + 向(xiàng toward/direction)',ex:'她的管理風格非常結果導向，不在乎你怎麼做，只看最終成果。',exen:'Her management style is very results-oriented — she doesn\'t care how you do it, only what you achieve.',src:'class',tags:'business'},
+  {h:'裁員',p:'cáiyuán',b:'ㄘㄞˊ ㄩㄢˊ',e:'layoff; workforce reduction; to lay off employees',con:'neg',reg:'for',freq:'high',ety:'裁(cái) to cut/reduce + 員(yuán) employee/member. Cutting employees — a layoff.',comp:'裁(cái cut/reduce) + 員(yuán employee/member)',ex:'公司這季業績不好，傳出可能會裁員的消息。',exen:'The company had a bad quarter and there are rumors of possible layoffs.',src:'class',tags:'business'},
+  {h:'戰戰兢兢',p:'zhànzhàn jīngjīng',b:'ㄓㄢˋ ㄓㄢˋ ㄐㄧㄥ ㄐㄧㄥ',e:'extremely cautious; trembling with anxiety; walking on eggshells',con:'neg',reg:'for',freq:'med',ety:'戰戰(zhànzhàn) trembling/shaking + 兢兢(jīngjīng) vigilant/careful. Trembling and vigilant — the feeling of moving very carefully through a dangerous situation.',comp:'戰(zhàn tremble/battle) + 兢(jīng cautious/vigilant)',ex:'新人進公司第一個月，做什麼都戰戰兢兢的，怕出錯。',exen:'In the first month at a new company, every new employee is walking on eggshells, afraid to make mistakes.',src:'class',tags:'idiom'},
+  {h:'焦慮',p:'jiāolǜ',b:'ㄐㄧㄠ ㄌㄩˋ',e:'anxiety; anxious; worried',con:'neg',reg:'cas',freq:'high',ety:'焦(jiāo) scorched/burning with worry + 慮(lǜ) to worry/consider. Burning with worry — anxiety.',comp:'焦(jiāo scorched/worried) + 慮(lǜ worry/consider)',ex:'考試前一天晚上她總是特別焦慮，根本睡不著。',exen:'The night before an exam she always gets especially anxious and can\'t sleep.',src:'class',tags:'psychology'},
+  {h:'捷徑',p:'jiéjìng',b:'ㄐㄧㄝˊ ㄐㄧㄥˋ',e:'shortcut; a faster route',con:'neu',reg:'cas',freq:'high',ety:'捷(jié quick/nimble) + 徑(jìng path/route). A quick path — a shortcut, used both literally and for shortcuts in life.',comp:'捷(jié quick/nimble) + 徑(jìng path/route)',ex:'學語言沒有捷徑，只能一步一步地累積。',exen:'There\'s no shortcut to learning a language — you just have to build it step by step.',src:'class',tags:''},
+  {h:'計較',p:'jìjiào',b:'ㄐㄧˋ ㄐㄧㄠˋ',e:'to fuss over; to keep score; to be particular about; to take offense',con:'neg',reg:'cas',freq:'high',ety:'計(jì) to count/calculate + 較(jiào) to compare/measure. Counting and comparing every little thing — fussing over details or keeping score in relationships.',comp:'計(jì count/calculate) + 較(jiào compare/measure)',ex:'好的朋友之間不應該太計較，否則關係會越來越疏遠。',exen:'Good friends shouldn\'t keep score with each other — that just makes the relationship more distant.',src:'class',tags:''},
+  {h:'感同身受',p:'gǎntóng shēnshòu',b:'ㄍㄢˇ ㄊㄨㄥˊ ㄕㄣ ㄕㄡˋ',e:'to empathize deeply; to feel it as if it happened to you; truly relatable',con:'pos',reg:'for',freq:'high',ety:'感(gǎn) to feel + 同(tóng) same + 身(shēn) body + 受(shòu) receive/experience. Feeling the same thing with your own body — true empathy.',comp:'感(gǎn feel) + 同(tóng same) + 身(shēn body) + 受(shòu experience)',ex:'她分享的故事讓我完全感同身受，忍不住哭了。',exen:'The story she shared made me feel it so deeply I couldn\'t help but cry.',src:'class',tags:''},
+  {h:'察言觀色',p:'chá yán guān sè',b:'ㄔㄚˊ ㄧㄢˊ ㄍㄨㄢ ㄙㄜˋ',e:'to read the room; to observe people\'s words and expressions to gauge mood',con:'neu',reg:'for',freq:'high',ety:'察(chá) observe carefully + 言(yán) words + 觀(guān) look at + 色(sè) expression/color. Carefully reading words and facial expressions — social intelligence.',comp:'察(chá observe) + 言(yán words) + 觀(guān look) + 色(sè expression)',ex:'在職場上，察言觀色是一項非常重要的軟實力。',exen:'In the workplace, the ability to read the room is a very important soft skill.',src:'class',tags:'idiom business'},
+  {h:'九牛一毛',p:'jiǔ niú yī máo',b:'ㄐㄧㄡˇ ㄋㄧㄡˊ ㄧ ㄇㄠˊ',e:'a drop in the bucket; a tiny fraction of something huge',con:'neg',reg:'cas',freq:'med',ety:'One hair (一毛) from nine oxen (九牛). Such a tiny portion of something enormous that it barely registers — a drop in the bucket.',comp:'九(jiǔ nine) + 牛(niú ox) + 一(yī one) + 毛(máo hair)',ex:'他捐的錢對這個億萬富翁來說不過是九牛一毛。',exen:'The money he donated was a drop in the bucket for a billionaire like him.',src:'class',tags:'idiom'},
+  {h:'硬著頭皮',p:'yìngzhe tóupí',b:'ㄧㄥˋ ㄓㄜ ㄊㄡˊ ㄆㄧˊ',e:'to force yourself to do something; to steel yourself and just do it',con:'neg',reg:'cas',freq:'high',ety:'硬(yìng) hard/stiff + 著(zhe ongoing) + 頭皮(tóupí) scalp. Stiffening your scalp — bracing yourself to do something uncomfortable.',comp:'硬(yìng stiff/force) + 頭皮(tóupí scalp)',ex:'雖然很緊張，她還是硬著頭皮上台報告。',exen:'Even though she was terrified, she steeled herself and went up to present.',src:'class',tags:''},
+  {h:'潛意識',p:'qiányìshí',b:'ㄑㄧㄢˊ ㄧˋ ㄕˊ',e:'subconscious; unconscious mind',con:'neu',reg:'for',freq:'med',ety:'潛(qián) submerged/hidden + 意識(yìshí) consciousness. Consciousness that is submerged below the surface — the subconscious.',comp:'潛(qián submerged) + 意(yì meaning/intention) + 識(shí consciousness)',ex:'我們很多決定其實是潛意識做出來的，理性只是事後解釋。',exen:'Many of our decisions are actually made by the subconscious — rationality is just the after-the-fact explanation.',src:'class',tags:'psychology'},
+  {h:'萬中選一',p:'wàn zhōng xuǎn yī',b:'ㄨㄢˋ ㄓㄨㄥ ㄒㄩㄢˇ ㄧ',e:'one in a million; exceptionally rare',con:'pos',reg:'for',freq:'med',ety:'From ten thousand (萬) choose one (選一). From among ten thousand, picking only one — exceptional rarity.',comp:'萬(wàn ten thousand) + 中(zhōng among) + 選(xuǎn choose) + 一(yī one)',ex:'能在這個競爭激烈的行業脫穎而出，真的是萬中選一。',exen:'To stand out in such a competitive industry — that\'s truly one in a million.',src:'class',tags:'idiom'},
+  {h:'企圖心',p:'qǐtúxīn',b:'ㄑㄧˇ ㄊㄨˊ ㄒㄧㄣ',e:'ambition; drive; the desire to achieve',con:'pos',reg:'for',freq:'high',ety:'企圖(qǐtú) intention/attempt + 心(xīn) heart/mind. The heart that attempts and reaches — ambition.',comp:'企(qǐ stand on tiptoe/aspire) + 圖(tú plan/attempt) + 心(xīn heart)',ex:'面試官很看重企圖心，比學歷更重要。',exen:'Interviewers value ambition highly — more than academic credentials.',src:'class',tags:'business'},
+  {h:'低估',p:'dīgū',b:'ㄉㄧ ㄍㄨ',e:'to underestimate; to undervalue',con:'neg',reg:'cas',freq:'high',ety:'低(dī) low + 估(gū) estimate. To estimate too low — to underestimate.',comp:'低(dī low) + 估(gū estimate)',ex:'很多人低估了學語言需要的時間和毅力。',exen:'Many people underestimate the time and persistence required to learn a language.',src:'class',tags:''},
+  {h:'放空',p:'fàngkōng',b:'ㄈㄤˋ ㄎㄨㄥ',e:'to zone out; to mentally check out; to let your mind go blank',con:'neu',reg:'cas',freq:'high',ety:'放(fàng) release + 空(kōng) empty. Releasing into emptiness — letting your mind go blank.',comp:'放(fàng release) + 空(kōng empty)',ex:'工作壓力太大的時候，她喜歡放空十分鐘，什麼都不想。',exen:'When work stress gets too heavy, she likes to zone out for ten minutes and think about nothing.',src:'class',tags:'slang'},
+  {h:'里程碑',p:'lǐchéngbēi',b:'ㄌㄧˇ ㄔㄥˊ ㄅㄟ',e:'milestone; a significant marker of progress',con:'pos',reg:'for',freq:'high',ety:'里程(lǐchéng) mileage/distance traveled + 碑(bēi) stone monument. A stone marker along the road — a milestone.',comp:'里(lǐ unit of distance) + 程(chéng journey) + 碑(bēi stone marker)',ex:'拿到第一個客戶是她創業旅程中的重要里程碑。',exen:'Getting her first client was an important milestone in her entrepreneurial journey.',src:'class',tags:'business'},
+  {h:'見人說人話見鬼說鬼話',p:'jiàn rén shuō rén huà jiàn guǐ shuō guǐ huà',b:'ㄐㄧㄢˋ ㄖㄣˊ ㄕㄨㄛ ㄖㄣˊ ㄏㄨㄚˋ ㄐㄧㄢˋ ㄍㄨㄟˇ ㄕㄨㄛ ㄍㄨㄟˇ ㄏㄨㄚˋ',e:'tell people what they want to hear; adapt your message to your audience',con:'neg',reg:'cas',freq:'med',ety:'With people (人) speak human language; with ghosts (鬼) speak ghost language. Chameleon-like adaptability in communication — can be admired as social skill or criticized as two-faced.',comp:'見(jiàn see/meet) + 人(rén person) + 鬼(guǐ ghost) + 說話(shuōhuà speak)',ex:'她在職場上很會見人說人話見鬼說鬼話，每個老闆都喜歡她。',exen:'She\'s a master at telling people what they want to hear — every boss loves her.',src:'class',tags:'idiom'},
+  {h:'讀萬卷書不如行萬里路',p:'dú wàn juàn shū bùrú xíng wàn lǐ lù',b:'ㄉㄨˊ ㄨㄢˋ ㄐㄩㄢˋ ㄕㄨ ㄅㄨˋ ㄖㄨˊ ㄒㄧㄥˊ ㄨㄢˋ ㄌㄧˇ ㄌㄨˋ',e:'experience is the best teacher; traveling ten thousand miles beats reading ten thousand books',con:'pos',reg:'for',freq:'med',ety:'Reading ten thousand volumes of books (讀萬卷書) is not as good as (不如) traveling ten thousand li of road (行萬里路). Knowledge from books is valuable but real-world experience surpasses it.',comp:'讀(dú read) + 萬卷書(wànjuànshū ten thousand books) + 不如(bùrú not as good as) + 行萬里路(xíngwànlǐlù travel far)',ex:'讀萬卷書不如行萬里路，出去工作才真的懂這個行業。',exen:'Experience beats book learning — going out and working teaches you more about an industry than any book.',src:'class',tags:'idiom'},
+  {h:'柔性殖民主義',p:'róuxìng zhímín zhǔyì',b:'ㄖㄡˊ ㄒㄧㄥˋ ㄓˊ ㄇㄧㄣˊ ㄓㄨˇ ㄧˋ',e:'soft colonialism; cultural or economic domination without direct force',con:'neg',reg:'for',freq:'low',ety:'柔性(róuxìng) soft/flexible + 殖民(zhímín) colonialism + 主義(zhǔyì) -ism. Colonialism that works through economic influence, media, and culture rather than military force.',comp:'柔(róu soft) + 性(xìng nature) + 殖民(zhímín colonialism) + 主義(zhǔyì ideology)',ex:'有學者認為好萊塢電影是一種柔性殖民主義的工具。',exen:'Some scholars argue that Hollywood films are a tool of soft colonialism.',src:'class',tags:''},
+  {h:'爭議',p:'zhēngyì',b:'ㄓㄥ ㄧˋ',e:'controversy; dispute; contentious',con:'neg',reg:'for',freq:'high',ety:'爭(zhēng) to contend/argue + 議(yì) discuss/debate. Arguing and debating — controversy.',comp:'爭(zhēng argue/contend) + 議(yì discuss/debate)',ex:'這個政策引發了很大的爭議，社會各界都有不同看法。',exen:'This policy sparked major controversy — different sectors of society have very different views.',src:'class',tags:''},
+  {h:'靈感',p:'línggǎn',b:'ㄌㄧㄥˊ ㄍㄢˇ',e:'inspiration; creative spark',con:'pos',reg:'cas',freq:'high',ety:'靈(líng) spirit/magical + 感(gǎn) feeling/sense. A magical feeling — inspiration that seems to come from beyond.',comp:'靈(líng spirit/magical) + 感(gǎn feeling)',ex:'她說洗澡的時候最容易有靈感，腦子特別清楚。',exen:'She says inspiration comes easiest in the shower — her mind is especially clear.',src:'class',tags:''},
+  {h:'內耗',p:'nèihào',b:'ㄋㄟˋ ㄏㄠˋ',e:'internal friction; draining energy through overthinking or internal conflict',con:'neg',reg:'cas',freq:'high',ety:'內(nèi) internal + 耗(hào) consume/drain. Energy consumed from within — mental drain from overthinking, self-doubt, or unresolved internal conflict.',comp:'內(nèi internal) + 耗(hào consume/drain)',ex:'她最大的問題不是能力不足，而是太容易內耗，想太多。',exen:'Her biggest problem isn\'t lack of ability — it\'s that she drains herself through overthinking.',src:'class',tags:'psychology slang'},
+  {h:'爆發力',p:'bàofālì',b:'ㄅㄠˋ ㄈㄚ ㄌㄧˋ',e:'explosive power; ability to make a big push in a short time; burst capacity',con:'pos',reg:'cas',freq:'med',ety:'爆發(bàofā) explode/burst out + 力(lì) power. The power to explode — the capacity for a sudden intense push.',comp:'爆(bào explode) + 發(fā burst out) + 力(lì power)',ex:'她在截止日期前總是爆發力驚人，一天可以完成別人一週的工作量。',exen:'Right before deadlines her burst capacity is incredible — she can do in a day what others do in a week.',src:'class',tags:''},
+  {h:'直球面對',p:'zhíqiú miànduì',b:'ㄓˊ ㄑㄧㄡˊ ㄇㄧㄢˋ ㄉㄨㄟˋ',e:'to face something head-on; to tackle it directly; to rip off the band-aid',con:'pos',reg:'cas',freq:'high',ety:'直球(zhíqiú) straight ball (baseball term) + 面對(miànduì) face. Throwing a straight pitch right at it — confronting something directly without dancing around it.',comp:'直(zhí straight/direct) + 球(qiú ball) + 面(miàn face) + 對(duì toward)',ex:'這個問題拖太久了，應該直球面對，跟他直接談清楚。',exen:'This issue has dragged on too long — time to face it head-on and talk it through directly.',src:'class',tags:'slang'},
+  {h:'社交能量',p:'shèjiāo néngliàng',b:'ㄕㄜˋ ㄐㄧㄠ ㄋㄥˊ ㄌㄧㄤˋ',e:'social energy; social battery',con:'neu',reg:'cas',freq:'high',ety:'社交(shèjiāo) social + 能量(néngliàng) energy. The energy you have available for social interaction — your social battery.',comp:'社交(shèjiāo social) + 能量(néngliàng energy)',ex:'她是個內向的人，參加完派對後社交能量完全耗盡。',exen:'She\'s an introvert — after a party her social battery is completely drained.',src:'class',tags:'psychology'},
+  {h:'再求有再求好',p:'zài qiú yǒu zài qiú hǎo',b:'ㄗㄞˋ ㄑㄧㄡˊ ㄧㄡˇ ㄗㄞˋ ㄑㄧㄡˊ ㄏㄠˇ',e:'first make it exist, then make it good; done is better than perfect',con:'pos',reg:'cas',freq:'med',ety:'先求有(xiān qiú yǒu) first seek to have it exist + 再求好(zài qiú hǎo) then seek to make it good. A startup and creative philosophy — ship first, refine later.',comp:'求有(qiú yǒu seek existence) + 求好(qiú hǎo seek quality)',ex:'創業初期最重要的是再求有再求好，完美主義只會讓你原地踏步。',exen:'In early-stage startups the most important thing is to ship first and improve later — perfectionism just keeps you stuck.',src:'class',tags:'business'},
+  {h:'托無可拖',p:'tuō wú kě tuō',b:'ㄊㄨㄛ ㄨˊ ㄎㄜˇ ㄊㄨㄛ',e:'can\'t procrastinate any further; no more delaying possible',con:'neg',reg:'cas',freq:'med',ety:'托/拖(tuō) procrastinate/delay + 無可(wú kě) nothing possible. There is nothing left that can be delayed — you must act now.',comp:'拖(tuō delay) + 無(wú nothing) + 可(kě possible) + 拖(tuō delay)',ex:'論文截止日期明天到，真的托無可拖，今晚必須完成。',exen:'The thesis deadline is tomorrow — I really can\'t delay any further, it has to be done tonight.',src:'class',tags:''},
+  {h:'進進退退',p:'jìnjìn tuìtuì',b:'ㄐㄧㄣˋ ㄐㄧㄣˋ ㄊㄨㄟˋ ㄊㄨㄟˋ',e:'one step forward two steps back; going back and forth without progress',con:'neg',reg:'cas',freq:'med',ety:'進(jìn) advance + 退(tuì) retreat, both doubled for emphasis. Advancing and retreating repeatedly — the frustrating feeling of going nowhere despite effort.',comp:'進(jìn advance) + 退(tuì retreat)',ex:'這個談判進進退退了好幾個月，雙方都很疲憊。',exen:'The negotiation went back and forth for months — both sides are exhausted.',src:'class',tags:''},
+  {h:'截然不同',p:'jiérán bùtóng',b:'ㄐㄧㄝˊ ㄖㄢˊ ㄅㄨˋ ㄊㄨㄥˊ',e:'completely different; starkly different; night and day',con:'neu',reg:'for',freq:'high',ety:'截然(jiérán) completely/sharply cut off + 不同(bùtóng) different. Cut sharply apart — completely and starkly different.',comp:'截(jié cut off) + 然(rán so/thus) + 不(bù not) + 同(tóng same)',ex:'她在家裡和在工作上的表現截然不同，讓人很驚訝。',exen:'Her behavior at home and at work is completely different — it surprises people.',src:'class',tags:'connector'},
+  {h:'視覺化',p:'shìjuéhuà',b:'ㄕˋ ㄐㄩㄝˊ ㄏㄨㄚˋ',e:'to visualize; visualization',con:'pos',reg:'for',freq:'high',ety:'視覺(shìjué) visual sense + 化(huà) -ize. To make visual — visualization.',comp:'視(shì see) + 覺(jué sense/feel) + 化(huà transform into)',ex:'把目標視覺化，例如貼照片在牆上，真的有助於實現夢想。',exen:'Visualizing your goals — like putting photos on the wall — really does help you achieve them.',src:'class',tags:''},
+  {h:'愚蠢',p:'yúchǔn',b:'ㄩˊ ㄔㄨㄣˇ',e:'stupid; foolish; silly',con:'neg',reg:'cas',freq:'high',ety:'愚(yú) foolish/ignorant + 蠢(chǔn) stupid/clumsy. Both characters mean stupid — combined for emphasis.',comp:'愚(yú foolish) + 蠢(chǔn stupid/clumsy)',ex:'她事後回想，覺得當時的決定真的很愚蠢。',exen:'Looking back, she thought the decision she made at the time was really stupid.',src:'class',tags:''},
+  {h:'詐欺',p:'zhàqī',b:'ㄓㄚˋ ㄑㄧ',e:'fraud; scam; to defraud',con:'neg',reg:'for',freq:'high',ety:'詐(zhà) deceive/swindle + 欺(qī) cheat/bully. Deceiving and cheating — fraud.',comp:'詐(zhà deceive) + 欺(qī cheat/bully)',ex:'她差點被網路詐欺騙走一大筆錢，幸好及時發現。',exen:'She almost got scammed out of a large sum online — fortunately she caught it in time.',src:'class',tags:''},
+  {h:'一錯再錯',p:'yī cuò zài cuò',b:'ㄧ ㄘㄨㄛˋ ㄗㄞˋ ㄘㄨㄛˋ',e:'to keep making the same mistake; to double down on an error',con:'neg',reg:'cas',freq:'high',ety:'一錯(yī cuò) one mistake + 再錯(zài cuò) make the mistake again. Making a mistake once, then making it again — compounding errors.',comp:'一(yī one) + 錯(cuò wrong/mistake) + 再(zài again) + 錯(cuò wrong)',ex:'他明知道這個策略行不通，卻還是一錯再錯，不願意改變。',exen:'He knew the strategy wasn\'t working but kept making the same mistake — unwilling to change.',src:'class',tags:''},
+  {h:'固執',p:'gùzhí',b:'ㄍㄨˋ ㄓˊ',e:'stubborn; obstinate; pig-headed',con:'neg',reg:'cas',freq:'high',ety:'固(gù) solid/firm + 執(zhí) hold/grasp. Firmly grasping and not letting go — stubbornness.',comp:'固(gù solid/firm) + 執(zhí hold/grasp)',ex:'他太固執了，即使別人提出更好的方法也不願意嘗試。',exen:'He\'s so stubborn that even when someone suggests a better approach he refuses to try it.',src:'class',tags:''},
+  {h:'高級酸',p:'gāojí suān',b:'ㄍㄠ ㄐㄧˊ ㄙㄨㄢ',e:'sophisticated sarcasm; saying one thing while meaning another; high-level shade',con:'neg',reg:'cas',freq:'med',ety:'高級(gāojí) high-level/sophisticated + 酸(suān) sour/envious/sarcastic. High-level sourness — sophisticated shade that sounds complimentary but cuts deep. No profanity, all implication.',comp:'高級(gāojí sophisticated) + 酸(suān sour/sarcastic)',ex:'她說「你今天氣色真的很特別」，這種高級酸讓人哭笑不得。',exen:'She said \'you have a really unique complexion today\' — that kind of sophisticated shade leaves you not knowing whether to laugh or cry.',src:'class',tags:'slang'},
+  {h:'懂王',p:'dǒngwáng',b:'ㄉㄨㄥˇ ㄨㄤˊ',e:'know-it-all; someone who acts like they know everything',con:'neg',reg:'cas',freq:'med',ety:'懂(dǒng) understand/know + 王(wáng) king. King of knowing — internet slang for someone who constantly acts like the biggest expert in the room. Originally associated with Trump.',comp:'懂(dǒng understand) + 王(wáng king)',ex:'會議上那個同事一直插嘴，完全是個懂王。',exen:'That colleague kept interrupting the meeting — total know-it-all energy.',src:'class',tags:'slang mainland'},
+  {h:'復盤',p:'fùpán',b:'ㄈㄨˋ ㄆㄢˊ',e:'to review; to debrief; to replay a situation to learn from it',con:'pos',reg:'cas',freq:'high',ety:'復(fù) redo/replay + 盤(pán) board (as in a game board). Replaying the board — reviewing a game or situation move by move to learn from it. Now widely used in business for post-mortems.',comp:'復(fù replay/redo) + 盤(pán board/replay)',ex:'每次專案結束後，團隊都會花時間復盤，找出可以改進的地方。',exen:'After every project the team takes time to debrief and identify areas for improvement.',src:'class',tags:'business mainland'},
+  {h:'該咋咋地',p:'gāi zǎ zǎ de',b:'ㄍㄞ ㄗㄚˇ ㄗㄚˇ ㄉㄜ',e:'do what you have to do; whatever happens happens; just go for it',con:'neu',reg:'cas',freq:'med',ety:'Colloquial Mainland Northern Chinese expression. 該(gāi) should/whatever + 咋(zǎ) how/whatever (dialect) + 地(de suffix). Whatever needs to happen, let it happen — a casual acceptance of consequences.',comp:'該(gāi should/whatever) + 咋(zǎ whatever way) + 地(de adverbial suffix)',ex:'申請了就申請了，該咋咋地，結果怎樣都接受。',exen:'Applied is applied — whatever happens happens, I\'ll accept whatever the outcome is.',src:'class',tags:'slang mainland'},
+  {h:'雞婆',p:'jīpó',b:'ㄐㄧ ㄆㄛˊ',e:'busybody; nosy; minding other people\'s business',con:'neg',reg:'cas',freq:'high',ety:'雞婆(jīpó) literally \'hen woman\' — a Taiwanese/Hokkien-origin term for someone who meddles in others\' affairs like a hen clucking around.',comp:'雞(jī chicken/hen) + 婆(pó old woman/matron)',ex:'她很雞婆，別人的事情她都要管一下。',exen:'She\'s such a busybody — she has to stick her nose into everyone\'s business.',src:'class',tags:'slang'},
+  {h:'唱衰',p:'chàngshuāi',b:'ㄔㄤˋ ㄕㄨㄞ',e:'to predict failure; to be a Debbie Downer; to talk something down',con:'neg',reg:'cas',freq:'high',ety:'唱(chàng) to sing/voice + 衰(shuāi) decline/failure. Singing the song of decline — loudly predicting or promoting the idea that something will fail.',comp:'唱(chàng sing/voice) + 衰(shuāi decline/failure)',ex:'大家都在唱衰這個新創公司，但她堅持做下去，最後成功了。',exen:'Everyone was predicting this startup would fail, but she kept going and ultimately succeeded.',src:'class',tags:''},
+  {h:'撕破臉',p:'sīpò liǎn',b:'ㄙ ㄆㄛˋ ㄌㄧㄢˇ',e:'to openly break ties; to tear up the relationship; to go from civil to hostile',con:'neg',reg:'cas',freq:'high',ety:'撕(sī) tear + 破(pò break) + 臉(liǎn face. Tearing the face apart — destroying the polite surface of a relationship and going openly hostile.',comp:'撕(sī tear) + 破(pò break/destroy) + 臉(liǎn face)',ex:'他們吵到最後撕破臉，在會議室當著所有人的面大吵一架。',exen:'They ended up openly breaking ties — screaming at each other in the conference room in front of everyone.',src:'class',tags:''},
+  {h:'黑臉白臉',p:'hēiliǎn báiliǎn',b:'ㄏㄟ ㄌㄧㄢˇ ㄅㄞˊ ㄌㄧㄢˇ',e:'good cop bad cop strategy; one person plays tough one plays nice',con:'neu',reg:'cas',freq:'high',ety:'黑臉(hēiliǎn) black face (stern/tough) + 白臉(báiliǎn) white face (kind/gentle). From Chinese opera character types — the bad guy and the good guy working together as a strategy.',comp:'黑(hēi black) + 臉(liǎn face) + 白(bái white) + 臉(liǎn face)',ex:'那對父母很擅長唱黑臉白臉，一個嚴格一個溫柔，效果很好。',exen:'That couple is great at good cop bad cop — one strict one gentle, very effective.',src:'class',tags:'idiom'},
+  {h:'心累',p:'xīnlèi',b:'ㄒㄧㄣ ㄌㄟˋ',e:'emotionally tired; drained from emotional labor or stress',con:'neg',reg:'cas',freq:'high',ety:'心(xīn) heart/mind + 累(lèi tired. The heart is tired — not physical exhaustion but the drain of emotional burden.',comp:'心(xīn heart/mind) + 累(lèi tired)',ex:'不是身體累，是心累，這份工作消耗了太多情緒。',exen:'It\'s not physical fatigue — I\'m emotionally drained. This job takes too much out of you emotionally.',src:'class',tags:'slang'},
+  {h:'婉轉',p:'wǎnzhuǎn',b:'ㄨㄢˇ ㄓㄨㄢˇ',e:'tactful; gentle and roundabout; indirect but kind',con:'pos',reg:'for',freq:'med',ety:'婉(wǎn) graceful/gentle + 轉(zhuǎn) turn/wind. Gently winding around — saying something difficult in a kind, roundabout way.',comp:'婉(wǎn graceful) + 轉(zhuǎn wind/turn)',ex:'她婉轉地提出了不同意見，讓對方完全沒有感到被攻擊。',exen:'She raised her disagreement so tactfully that the other person didn\'t feel attacked at all.',src:'class',tags:''},
+  {h:'柏拉圖精神出軌',p:'bólātú jīngshén chūguǐ',b:'ㄅㄛˊ ㄌㄚ ㄊㄨˊ ㄐㄧㄥ ㄕㄣˊ ㄔㄨ ㄍㄨㄟˇ',e:'emotional cheating; platonic emotional affair',con:'neg',reg:'cas',freq:'med',ety:'柏拉圖(bólātú) Platonic (Plato) + 精神(jīngshén) spiritual/emotional + 出軌(chūguǐ) derail/cheat. A Platonic emotional derailment — emotional intimacy with someone outside the relationship without physical infidelity.',comp:'柏拉圖(Plato) + 精神(jīngshén emotional/spiritual) + 出軌(chūguǐ go off track/cheat)',ex:'她跟那個男同事每天深夜聊天，被男友說是柏拉圖精神出軌。',exen:'She was chatting with that male colleague late every night — her boyfriend called it an emotional affair.',src:'class',tags:''},
+  {h:'遺憾',p:'yíhàn',b:'ㄧˊ ㄏㄢˋ',e:'regret; a pity; something to be sorry about',con:'neg',reg:'cas',freq:'high',ety:'遺(yí) leave behind/lose + 憾(hàn) regret. Something left behind as regret — an unfulfilled wish that stays with you.',comp:'遺(yí leave behind) + 憾(hàn regret)',ex:'她最大的遺憾是沒有在父親去世前告訴他自己有多愛他。',exen:'Her biggest regret is not telling her father how much she loved him before he passed.',src:'class',tags:''},
+  {h:'號召力',p:'hàozhàolì',b:'ㄏㄠˋ ㄓㄠˋ ㄌㄧˋ',e:'ability to rally people; influence; the power to mobilize others',con:'pos',reg:'for',freq:'med',ety:'號召(hàozhào) to call out/rally + 力(lì) power. The power to call people to action — charismatic influence.',comp:'號(hào call out/号) + 召(zhào summon) + 力(lì power)',ex:'她的號召力很強，一個貼文就能動員幾千人參與。',exen:'She has incredible mobilizing power — one post can get thousands of people to participate.',src:'class',tags:''},
+  {h:'精疲力竭',p:'jīngpí lìjié',b:'ㄐㄧㄥ ㄆㄧˊ ㄌㄧˋ ㄐㄧㄝˊ',e:'utterly exhausted; drained of all energy',con:'neg',reg:'for',freq:'high',ety:'精(jīng) essence/spirit + 疲(pí) tired + 力(lì) strength + 竭(jié) exhausted/depleted. Spirit tired, strength depleted — total exhaustion.',comp:'精(jīng spirit/essence) + 疲(pí tired) + 力(lì strength) + 竭(jié depleted)',ex:'跑完馬拉松後她精疲力竭，連說話的力氣都沒有。',exen:'After finishing the marathon she was utterly exhausted — no energy even to speak.',src:'class',tags:'idiom'},
+  {h:'平行',p:'píngxíng',b:'ㄆㄧㄥˊ ㄒㄧㄥˊ',e:'parallel; running alongside without intersecting',con:'neu',reg:'for',freq:'high',ety:'平(píng) flat/level + 行(xíng) go/travel. Going at the same level — parallel.',comp:'平(píng flat/level) + 行(xíng go/travel)',ex:'她覺得他們的人生就像平行線，永遠不會相交。',exen:'She felt like their lives were parallel lines that would never intersect.',src:'class',tags:''},
+  {h:'銷售',p:'xiāoshòu',b:'ㄒㄧㄠ ㄕㄡˋ',e:'sales; to sell',con:'neu',reg:'for',freq:'high',ety:'銷(xiāo) sell/circulate + 售(shòu) sell. Both characters mean to sell — combined for emphasis in formal commercial contexts.',comp:'銷(xiāo sell/circulate) + 售(shòu sell)',ex:'這個季度的銷售數字比去年同期成長了三十趴。',exen:'Sales figures this quarter grew thirty percent compared to the same period last year.',src:'class',tags:'business'},
+  {h:'行銷',p:'xíngxiāo',b:'ㄒㄧㄥˊ ㄒㄧㄠ',e:'marketing',con:'neu',reg:'for',freq:'high',ety:'行(xíng) execute/carry out + 銷(xiāo) sell/circulate. Carrying out the selling — marketing (Taiwan usage; Mainland uses 市場營銷).',comp:'行(xíng execute) + 銷(xiāo sell)',ex:'她從工程師轉職到行銷，因為她更喜歡直接面對消費者。',exen:'She switched from engineering to marketing because she preferred working directly with consumers.',src:'class',tags:'business'},
+  {h:'賣點',p:'màidiǎn',b:'ㄇㄞˋ ㄉㄧㄢˇ',e:'selling point; unique value proposition',con:'pos',reg:'for',freq:'high',ety:'賣(mài) sell + 點(diǎn) point. The point you sell on — what makes something attractive to buyers.',comp:'賣(mài sell) + 點(diǎn point)',ex:'這款產品最大的賣點是它的簡單易用，不需要任何技術知識。',exen:'This product\'s biggest selling point is how simple and easy to use it is — no technical knowledge required.',src:'class',tags:'business'},
+  {h:'複利',p:'fùlì',b:'ㄈㄨˋ ㄌㄧˋ',e:'compound interest; incremental compounding growth',con:'pos',reg:'for',freq:'med',ety:'複(fù) compound/repeated + 利(lì) interest/benefit. Repeated interest — compound interest, now used broadly for any compounding effect over time.',comp:'複(fù compound/repeated) + 利(lì interest/benefit)',ex:'學習的複利效應是最好的投資，每天進步一點點，幾年後差很多。',exen:'The compounding effect of learning is the best investment — improve a little every day and after a few years the difference is enormous.',src:'class',tags:'business'},
+  {h:'拓展',p:'tuòzhǎn',b:'ㄊㄨㄛˋ ㄓㄢˇ',e:'to expand; to develop; to extend (network, business, skills)',con:'pos',reg:'for',freq:'high',ety:'拓(tuò) open up/expand + 展(zhǎn) develop/spread out. Opening up and spreading out — expansion.',comp:'拓(tuò open up) + 展(zhǎn develop/spread)',ex:'她這次去新加坡的目的是拓展亞洲市場的人脈。',exen:'Her purpose in going to Singapore was to expand her network in the Asian market.',src:'class',tags:'business'},
+  {h:'首要之務',p:'shǒuyào zhī wù',b:'ㄕㄡˇ ㄧㄠˋ ㄓ ㄨˋ',e:'top priority; the most important thing to do',con:'neu',reg:'for',freq:'med',ety:'首要(shǒuyào) primary/most important + 之(zhī connecting particle) + 務(wù task/duty). The most important duty — top priority.',comp:'首(shǒu head/first) + 要(yào important) + 務(wù task/duty)',ex:'現在的首要之務是穩定現金流，其他的事情可以之後再說。',exen:'The top priority right now is stabilizing cash flow — everything else can wait.',src:'class',tags:'business'},
+  {h:'領域',p:'lǐngyù',b:'ㄌㄧㄥˇ ㄩˋ',e:'field; domain; area of expertise',con:'neu',reg:'for',freq:'high',ety:'領(lǐng) territory/lead + 域(yù) area/region. An area of territory — a domain or field.',comp:'領(lǐng territory) + 域(yù area/region)',ex:'她在人工智慧領域已經耕耘了十年，是公認的專家。',exen:'She\'s been working in the AI field for ten years — a recognized expert.',src:'class',tags:'business'},
+  {h:'失禮',p:'shīlǐ',b:'ㄕ ㄌㄧˇ',e:'impolite; lacking courtesy; a social misstep',con:'neg',reg:'for',freq:'med',ety:'失(shī) lose/miss + 禮(lǐ) courtesy/etiquette. Missing the mark on courtesy — a breach of etiquette.',comp:'失(shī miss/lose) + 禮(lǐ courtesy/ritual)',ex:'他在長輩面前沒有問候，被家人說很失禮。',exen:'He didn\'t greet the elders — his family told him it was very rude.',src:'class',tags:''},
+  {h:'討喜',p:'tǎoxǐ',b:'ㄊㄠˇ ㄒㄧˇ',e:'likable; bubbly; endearing; crowd-pleasing',con:'pos',reg:'cas',freq:'high',ety:'討(tǎo) seek/win + 喜(xǐ) happiness/approval. Winning happiness from others — being naturally likable and endearing.',comp:'討(tǎo seek/win) + 喜(xǐ happiness/approval)',ex:'她這個人非常討喜，不管到哪個場合都能讓大家開心。',exen:'She\'s incredibly likable — no matter what gathering she goes to, she makes everyone happy.',src:'class',tags:''},
+  {h:'不加思索',p:'bù jiā sīsuǒ',b:'ㄅㄨˋ ㄐㄧㄚ ㄙ ㄙㄨㄛˇ',e:'without thinking; off the top of one\'s head; impulsively',con:'neg',reg:'cas',freq:'med',ety:'不(bù) not + 加(jiā) add + 思索(sīsuǒ) thought/deliberation. Without adding any deliberation — not thinking before acting or speaking.',comp:'不(bù not) + 加(jiā add) + 思(sī think) + 索(suǒ search/deliberate)',ex:'她不加思索地答應了，後來才發現那天她已經有約了。',exen:'She agreed without thinking and only later realized she already had plans that day.',src:'class',tags:''},
+  {h:'齊頭並進',p:'qí tóu bìng jìn',b:'ㄑㄧˊ ㄊㄡˊ ㄅㄧㄥˋ ㄐㄧㄣˋ',e:'to go hand in hand; to advance together simultaneously',con:'pos',reg:'for',freq:'med',ety:'齊頭(qí tóu) even/level heads + 並進(bìng jìn) advance together. Moving forward at the same level together — parallel progress.',comp:'齊(qí even/aligned) + 頭(tóu head) + 並(bìng together) + 進(jìn advance)',ex:'這個計畫的兩個部分需要齊頭並進，不能顧此失彼。',exen:'The two parts of this plan need to advance simultaneously — you can\'t focus on one at the expense of the other.',src:'class',tags:'business'},
+  {h:'天馬行空',p:'tiānmǎ xíngkōng',b:'ㄊㄧㄢ ㄇㄚˇ ㄒㄧㄥˊ ㄎㄨㄥ',e:'wildly imaginative; free-ranging; unconstrained thinking',con:'pos',reg:'cas',freq:'high',ety:'天馬(tiānmǎ) heavenly horse + 行空(xíngkōng) travel through the sky. A heavenly horse galloping through the sky — imagination that roams freely without limits.',comp:'天(tiān heaven) + 馬(mǎ horse) + 行(xíng travel) + 空(kōng sky/empty)',ex:'她的提案天馬行空，很有創意，但執行難度很高。',exen:'Her proposal was wildly creative, but executing it would be extremely difficult.',src:'class',tags:'idiom'},
+  {h:'殺手鐧',p:'shāshǒujiǎn',b:'ㄕㄚ ㄕㄡˇ ㄐㄧㄢˇ',e:'trump card; last resort; secret weapon',con:'pos',reg:'cas',freq:'med',ety:'Originally a concealed weapon (鐧) used as a last resort. Now used for a trump card or decisive move kept in reserve.',comp:'殺手(shāshǒu killer/assassin) + 鐧(jiǎn a type of weapon)',ex:'他在談判最後關頭拿出殺手鐧，讓對方完全沒有準備。',exen:'He pulled out his trump card at the last moment of negotiations — the other side had no idea it was coming.',src:'class',tags:''},
+  {h:'微妙',p:'wēimiào',b:'ㄨㄟ ㄇㄧㄠˋ',e:'subtle; delicate; nuanced',con:'neu',reg:'for',freq:'high',ety:'微(wēi) tiny/minute + 妙(miào) wonderful/subtle. Wonderfully tiny — something delicate and nuanced that\'s hard to pin down.',comp:'微(wēi tiny/minute) + 妙(miào subtle/wonderful)',ex:'他們兩個人之間的關係非常微妙，讓旁邊的人都看不懂。',exen:'The relationship between those two is extremely subtle — people around them can\'t figure it out.',src:'class',tags:''},
+  {h:'未雨綢繆',p:'wèi yǔ chóumóu',b:'ㄨㄟˋ ㄩˇ ㄔㄡˊ ㄇㄡˊ',e:'to prepare before it rains; to plan ahead; saving for a rainy day',con:'pos',reg:'for',freq:'med',ety:'未雨(wèi yǔ) before rain + 綢繆(chóumóu) prepare/bind carefully. Preparing carefully before the rain comes — proactive planning.',comp:'未(wèi before) + 雨(yǔ rain) + 綢繆(chóumóu prepare carefully)',ex:'她很早就開始存退休金，真的很會未雨綢繆。',exen:'She started saving for retirement very early — she\'s really good at planning ahead.',src:'class',tags:'idiom'},
+  {h:'見機行事',p:'jiànjī xíngshì',b:'ㄐㄧㄢˋ ㄐㄧ ㄒㄧㄥˊ ㄕˋ',e:'to adapt to circumstances; to act according to the situation',con:'pos',reg:'for',freq:'med',ety:'見機(jiànjī) see the opportunity/moment + 行事(xíngshì) act/handle. Seeing the moment and acting accordingly — situational adaptability.',comp:'見(jiàn see) + 機(jī opportunity/moment) + 行(xíng act) + 事(shì affairs)',ex:'計畫趕不上變化，有時候就是要見機行事，隨機應變。',exen:'Plans can\'t keep up with change — sometimes you just have to adapt to the situation as it develops.',src:'class',tags:'idiom'},
+  {h:'亂槍打鳥',p:'luàn qiāng dǎ niǎo',b:'ㄌㄨㄢˋ ㄑㄧㄤ ㄉㄚˇ ㄋㄧㄠˇ',e:'to see what sticks; to try everything and hope something works; scattershot approach',con:'neg',reg:'cas',freq:'med',ety:'亂(luàn) randomly + 槍(qiāng) gun + 打鳥(dǎ niǎo) shoot birds. Firing randomly at birds and hoping one gets hit — a chaotic, untargeted approach.',comp:'亂(luàn random/chaotic) + 槍(qiāng gun) + 打(dǎ hit) + 鳥(niǎo bird)',ex:'她在求職初期亂槍打鳥，投了幾十份履歷，毫無策略。',exen:'In her early job search she took a scattershot approach — sending out dozens of resumes with no strategy.',src:'class',tags:'idiom'},
+  {h:'老生常談',p:'lǎoshēng chángtán',b:'ㄌㄠˇ ㄕㄥ ㄔㄤˊ ㄊㄢˊ',e:'cliché; a tired old topic; something talked about too many times',con:'neg',reg:'for',freq:'med',ety:'老生(lǎoshēng) old scholar/elderly person + 常談(chángtán) frequently discussed. The old scholar\'s oft-repeated topic — a cliché that everyone has heard too many times.',comp:'老(lǎo old) + 生(shēng scholar) + 常(cháng often) + 談(tán talk/discuss)',ex:'「要努力工作」這種話已經是老生常談，年輕人早就聽膩了。',exen:'\'Work hard\' — that\'s such a cliché, young people are sick of hearing it.',src:'class',tags:'idiom'},
+  {h:'起伏',p:'qǐfú',b:'ㄑㄧˇ ㄈㄨˊ',e:'rise and fall; ups and downs',con:'neu',reg:'cas',freq:'high',ety:'起(qǐ) rise + 伏(fú) fall/bow down. Rising and falling — the natural rhythm of ups and downs.',comp:'起(qǐ rise) + 伏(fú fall/bow)',ex:'她的職涯有很多起伏，但每次低潮都讓她變得更強。',exen:'Her career has had many ups and downs, but every low point made her stronger.',src:'class',tags:''},
+  {h:'情緒價值',p:'qíngxù jiàzhí',b:'ㄑㄧㄥˊ ㄒㄩˋ ㄐㄧㄚˋ ㄓˊ',e:'emotional value; the emotional support or comfort someone provides',con:'pos',reg:'cas',freq:'high',ety:'情緒(qíngxù) emotion + 價值(jiàzhí) value. The value derived from emotional connection — a modern term for the worth of emotional support in relationships.',comp:'情緒(qíngxù emotion) + 價值(jiàzhí value)',ex:'他工作能力很普通，但情緒價值超高，朋友有事都找他聊。',exen:'He\'s average professionally but his emotional value is through the roof — friends always go to him when they need to talk.',src:'class',tags:'slang'},
+  {h:'進取心',p:'jìnqǔxīn',b:'ㄐㄧㄣˋ ㄑㄩˇ ㄒㄧㄣ',e:'ambition; enterprising spirit; drive to advance',con:'pos',reg:'for',freq:'high',ety:'進取(jìnqǔ) advance and take + 心(xīn) heart. The heart that advances and takes — the drive to keep pushing forward.',comp:'進(jìn advance) + 取(qǔ take/obtain) + 心(xīn heart)',ex:'面試官說她最欣賞有進取心的候選人，不怕失敗敢於嘗試。',exen:'The interviewer said she most admires candidates with drive — those who aren\'t afraid to fail and dare to try.',src:'class',tags:'business'},
+  {h:'個人品牌',p:'gèrén pǐnpái',b:'ㄍㄜˋ ㄖㄣˊ ㄆㄧㄣˇ ㄆㄞˊ',e:'personal brand',con:'pos',reg:'for',freq:'high',ety:'個人(gèrén) personal/individual + 品牌(pǐnpái) brand. The brand of an individual person — how you present and market yourself.',comp:'個人(gèrén individual) + 品(pǐn quality/product) + 牌(pái brand/sign)',ex:'在社群媒體時代，經營個人品牌是職涯發展的重要策略。',exen:'In the social media era, building a personal brand is an important career strategy.',src:'class',tags:'business'},
+  {h:'甜言蜜語',p:'tiányán mìyǔ',b:'ㄊㄧㄢˊ ㄧㄢˊ ㄇㄧˋ ㄩˇ',e:'sweet talk; flattery; honeyed words',con:'neg',reg:'cas',freq:'high',ety:'甜(tián) sweet + 言(yán) words + 蜜(mì) honey + 語(yǔ language. Sweet words and honey language — flattery that sounds good but may be insincere.',comp:'甜(tián sweet) + 言(yán words) + 蜜(mì honey) + 語(yǔ speech)',ex:'他很會說甜言蜜語，但行動上從來沒有跟上。',exen:'He\'s great at sweet talk but his actions never follow through.',src:'class',tags:'idiom'},
+  {h:'忠誠',p:'zhōngchéng',b:'ㄓㄨㄥ ㄔㄥˊ',e:'loyal; loyalty; faithful',con:'pos',reg:'for',freq:'high',ety:'忠(zhōng) loyal/devoted + 誠(chéng) sincere/honest. Loyal and sincere — faithful devotion.',comp:'忠(zhōng loyal/devoted) + 誠(chéng sincere)',ex:'她對公司非常忠誠，即使有更好的機會也沒有跳槽。',exen:'She\'s extremely loyal to the company — even when better opportunities came along she didn\'t leave.',src:'class',tags:''},
+  {h:'轉換跑道',p:'zhuǎnhuàn pǎodào',b:'ㄓㄨㄢˇ ㄏㄨㄢˋ ㄆㄠˇ ㄉㄠˋ',e:'career pivot; to switch tracks; change direction',con:'neu',reg:'cas',freq:'high',ety:'轉換(zhuǎnhuàn) switch/change + 跑道(pǎodào) running track/runway. Switching to a different track — a career change or pivot.',comp:'轉(zhuǎn turn) + 換(huàn switch) + 跑(pǎo run) + 道(dào track/path)',ex:'她在三十歲決定轉換跑道，從金融業轉到科技業。',exen:'She decided to pivot at thirty, switching from finance to tech.',src:'class',tags:'business'},
+  {h:'良心',p:'liángxīn',b:'ㄌㄧㄤˊ ㄒㄧㄣ',e:'conscience; moral sense',con:'pos',reg:'cas',freq:'high',ety:'良(liáng) good/virtuous + 心(xīn) heart/mind. A good heart — conscience.',comp:'良(liáng good/virtuous) + 心(xīn heart)',ex:'她說她做不到，因為她有良心，不能欺騙顧客。',exen:'She said she couldn\'t do it — she has a conscience and can\'t deceive customers.',src:'class',tags:''},
+  {h:'重回正軌',p:'chónghuí zhèngguǐ',b:'ㄔㄨㄥˊ ㄏㄨㄟˊ ㄓㄥˋ ㄍㄨㄟˇ',e:'to get back on track; to recover and return to the right path',con:'pos',reg:'for',freq:'high',ety:'重回(chónghuí) return again + 正軌(zhèngguǐ) correct track/rails. Getting back onto the right rails — recovering after a setback.',comp:'重(chóng again) + 回(huí return) + 正(zhèng correct) + 軌(guǐ track/rail)',ex:'休息了三個月後，她感覺自己終於重回正軌，準備好迎接新挑戰。',exen:'After three months of rest she finally felt back on track and ready for new challenges.',src:'class',tags:''},
+  {h:'門檻',p:'ménkǎn',b:'ㄇㄣˊ ㄎㄢˇ',e:'barrier to entry; threshold; minimum requirement',con:'neg',reg:'for',freq:'high',ety:'門(mén) door/gate + 檻(kǎn sill/threshold). The threshold of a door — the minimum you must clear to enter.',comp:'門(mén door) + 檻(kǎn threshold/sill)',ex:'這個職位的門檻很高，要求至少五年相關工作經驗。',exen:'The barrier to entry for this position is very high — at least five years of relevant experience required.',src:'class',tags:'business'},
+  {h:'雙面刃',p:'shuāngmiànrèn',b:'ㄕㄨㄤ ㄇㄧㄢˋ ㄖㄣˋ',e:'double-edged sword; something with both benefits and risks',con:'neu',reg:'cas',freq:'high',ety:'雙面(shuāngmiàn) double-sided + 刃(rèn blade. A blade with two sides — something that cuts both ways.',comp:'雙(shuāng double) + 面(miàn side/face) + 刃(rèn blade)',ex:'社群媒體是一把雙面刃，既能幫助品牌曝光，也可能引發公關危機。',exen:'Social media is a double-edged sword — it can boost brand visibility but also trigger PR crises.',src:'class',tags:''},
+  {h:'執著',p:'zhízhuó',b:'ㄓˊ ㄓㄨㄛˊ',e:'persistent; attached to something; stubborn dedication',con:'neu',reg:'cas',freq:'high',ety:'執(zhí) hold/grasp + 著(zhuó) attached/stuck. Grasping and staying stuck — persistent attachment, which can be admirable or excessive depending on context.',comp:'執(zhí grasp/hold) + 著(zhuó attached)',ex:'她對這個夢想的執著讓很多人佩服，但也讓她付出了很大的代價。',exen:'Her persistence toward this dream earns admiration from many, but it\'s also cost her a great deal.',src:'class',tags:''},
+  {h:'無頭蒼蠅',p:'wútóu cāngyíng',b:'ㄨˊ ㄊㄡˊ ㄘㄤ ㄧㄥˊ',e:'like a headless fly; flailing around without direction',con:'neg',reg:'cas',freq:'med',ety:'無頭(wútóu) headless + 蒼蠅(cāngyíng) housefly. A fly with no head — buzzing around frantically with no sense of direction.',comp:'無(wú without) + 頭(tóu head) + 蒼蠅(cāngyíng fly)',ex:'她第一次創業的時候像個無頭蒼蠅，完全不知道從哪裡開始。',exen:'When she first started her business she was flailing around like a headless fly — no idea where to begin.',src:'class',tags:'idiom'},
+  {h:'自律',p:'zìlǜ',b:'ㄗˋ ㄌㄩˋ',e:'self-discipline; self-regulation',con:'pos',reg:'cas',freq:'high',ety:'自(zì) self + 律(lǜ) rule/discipline. Self-ruled — the ability to govern your own behavior without external enforcement.',comp:'自(zì self) + 律(lǜ rule/discipline)',ex:'她的成功很大程度上來自於她極強的自律，每天早上五點起床運動。',exen:'Her success is largely due to her incredible self-discipline — waking up at 5am every day to exercise.',src:'class',tags:''},
+  {h:'見面三分情',p:'jiànmiàn sānfēn qíng',b:'ㄐㄧㄢˋ ㄇㄧㄢˋ ㄙㄢ ㄈㄣ ㄑㄧㄥˊ',e:'face time earns goodwill; being present in person builds relationship',con:'pos',reg:'cas',freq:'med',ety:'見面(jiànmiàn) meeting in person + 三分(sānfēn) thirty percent + 情(qíng feeling/warmth. Meeting face to face generates thirty percent warmth — the value of physical presence in relationships.',comp:'見面(jiànmiàn meet in person) + 三分(sānfēn a portion) + 情(qíng warmth/feeling)',ex:'就算只是短暫的面對面，見面三分情，比傳訊息有效多了。',exen:'Even a brief in-person meeting does more than messaging — face time builds goodwill.',src:'class',tags:'idiom'},
+  {h:'驚弓之鳥',p:'jīnggōng zhī niǎo',b:'ㄐㄧㄥ ㄍㄨㄥ ㄓ ㄋㄧㄠˇ',e:'a bird startled by the bow; someone traumatized and overly cautious',con:'neg',reg:'for',freq:'med',ety:'A bird previously shot by an arrow becomes so traumatized that even the sound of a bow string makes it fall from the sky in panic. Describes someone so scarred by past experience they overreact to small things.',comp:'驚(jīng startled) + 弓(gōng bow) + 鳥(niǎo bird)',ex:'被騙過一次之後，她變得像驚弓之鳥，對任何陌生人都保持警戒。',exen:'After being deceived once, she became like a startled bird — guarded around any stranger.',src:'class',tags:'idiom'},
+  {h:'看人下菜',p:'kàn rén xià cài',b:'ㄎㄢˋ ㄖㄣˊ ㄒㄧㄚˋ ㄘㄞˋ',e:'to adjust your treatment based on who someone is; to play favorites',con:'neg',reg:'cas',freq:'high',ety:'看人(kàn rén) look at the person + 下菜(xià cài) serve the dish. Choosing which dish to serve based on who the diner is — treating people differently based on their status.',comp:'看(kàn look at) + 人(rén person) + 下(xià serve) + 菜(cài dish)',ex:'她很討厭那個同事，因為他明顯地看人下菜，對上司特別客氣。',exen:'She can\'t stand that colleague — he obviously plays favorites, being especially nice to superiors.',src:'class',tags:'idiom'},
+  {h:'絕招',p:'juézhāo',b:'ㄐㄩㄝˊ ㄓㄠ',e:'unique skill; killer move; a trick no one else has',con:'pos',reg:'cas',freq:'med',ety:'絕(jué) unmatched/ultimate + 招(zhāo) move/technique. An ultimate technique — a skill so good it sets you apart.',comp:'絕(jué ultimate/unmatched) + 招(zhāo move/technique)',ex:'她的絕招是能在十分鐘內把複雜的數據整理成一頁清晰的摘要。',exen:'Her killer skill is being able to organize complex data into one clear one-page summary in ten minutes.',src:'class',tags:''},
+  {h:'背書',p:'bèishū',b:'ㄅㄟˋ ㄕㄨ',e:'to endorse; to back someone up; to vouch for',con:'pos',reg:'for',freq:'high',ety:'Originally meant memorizing a book (背 recite + 書 book). Now means endorsing — literally putting your name on someone\'s back to support them.',comp:'背(bèi back/endorse) + 書(shū book/write)',ex:'有大公司的名字背書，她的新創公司一下子就獲得了投資人的信任。',exen:'With a big company\'s name behind her, her startup instantly gained investor trust.',src:'class',tags:'business'},
+  {h:'佛教',p:'fójiào',b:'ㄈㄛˊ ㄐㄧㄠˋ',e:'Buddhism',con:'neu',reg:'for',freq:'med',ety:'佛(fó) Buddha + 教(jiào) teaching/religion. The teaching of Buddha.',comp:'佛(fó Buddha) + 教(jiào teaching/religion)',ex:'她從小在佛教家庭長大，對因果和輪迴有很深的信仰。',exen:'She grew up in a Buddhist family and has a deep belief in karma and reincarnation.',src:'class',tags:'culture'},
+  {h:'聖經',p:'shèngjīng',b:'ㄕㄥˋ ㄐㄧㄥ',e:'the Bible; holy scripture',con:'neu',reg:'for',freq:'med',ety:'聖(shèng) holy/sacred + 經(jīng) scripture/classic text. Holy scripture.',comp:'聖(shèng holy) + 經(jīng scripture/classic)',ex:'她奶奶每天早上都讀聖經，是虔誠的基督徒。',exen:'Her grandmother reads the Bible every morning — she\'s a devout Christian.',src:'class',tags:'culture'},
+  {h:'聯邦',p:'liánbāng',b:'ㄌㄧㄢˊ ㄅㄤ',e:'federal; federation',con:'neu',reg:'for',freq:'med',ety:'聯(lián) connect/join + 邦(bāng) state/nation. Connected states — a federation.',comp:'聯(lián connect) + 邦(bāng state/nation)',ex:'美國是一個聯邦制國家，各州有一定程度的自治權。',exen:'The United States is a federal country — each state has a degree of autonomy.',src:'class',tags:''},
+  {h:'指控性',p:'zhǐkòngxìng',b:'ㄓˇ ㄎㄨㄥˋ ㄒㄧㄥˋ',e:'accusatory; having the quality of making accusations',con:'neg',reg:'for',freq:'low',ety:'指控(zhǐkòng) accuse/charge + 性(xìng nature/quality. The quality of making accusations — accusatory in tone.',comp:'指(zhǐ point at) + 控(kòng accuse/control) + 性(xìng nature)',ex:'她說話的方式太指控性，讓對方馬上變得防衛。',exen:'The way she spoke was too accusatory — it immediately put the other person on the defensive.',src:'class',tags:''},
+  {h:'探索',p:'tànsuǒ',b:'ㄊㄢˋ ㄙㄨㄛˇ',e:'to explore; to investigate; to search out',con:'pos',reg:'cas',freq:'high',ety:'探(tàn) probe/explore + 索(suǒ) search/seek. Probing and searching — exploration.',comp:'探(tàn probe/explore) + 索(suǒ search/seek)',ex:'她用了一年時間探索自己真正的興趣，最後決定轉職。',exen:'She spent a year exploring what she was truly interested in and ultimately decided to change careers.',src:'class',tags:''},
+  {h:'先下手為強',p:'xiān xià shǒu wéi qiáng',b:'ㄒㄧㄢ ㄒㄧㄚˋ ㄕㄡˇ ㄨㄟˊ ㄑㄧㄤˊ',e:'the first to act has the advantage; strike first to get ahead',con:'pos',reg:'cas',freq:'med',ety:'先(xiān) first + 下手(xià shǒu) put your hand down/act + 為強(wéi qiáng) be the stronger. The one who moves first is stronger — acting preemptively gives you the advantage.',comp:'先(xiān first) + 下手(xià shǒu act first) + 為(wéi be) + 強(qiáng strong)',ex:'市場機會不等人，先下手為強，等別人都進場就太晚了。',exen:'Market opportunities don\'t wait — strike first to get ahead, by the time everyone else moves in it\'s too late.',src:'class',tags:'idiom business'},
+  {h:'因人而異',p:'yīn rén ér yì',b:'ㄧㄣ ㄖㄣˊ ㄦˊ ㄧˋ',e:'varies from person to person; depends on the individual',con:'neu',reg:'for',freq:'high',ety:'因人(yīn rén) because of the person + 而異(ér yì) differ accordingly. Differing because of the person — individual variation.',comp:'因(yīn because of) + 人(rén person) + 而(ér and thus) + 異(yì differ)',ex:'學習的效果因人而異，找到適合自己的方式最重要。',exen:'Learning outcomes vary from person to person — finding what works for you is most important.',src:'class',tags:'connector'},
+  {h:'進化',p:'jìnhuà',b:'ㄐㄧㄣˋ ㄏㄨㄚˋ',e:'to evolve; evolution; to level up',con:'pos',reg:'cas',freq:'high',ety:'進(jìn) advance + 化(huà) transform. Advancing transformation — evolution or leveling up.',comp:'進(jìn advance) + 化(huà transform)',ex:'她說自己這幾年進化了很多，以前根本不敢在大家面前說話。',exen:'She says she\'s evolved a lot these past few years — she used to be terrified to speak in front of people.',src:'class',tags:''},
+  {h:'平靜',p:'píngjìng',b:'ㄆㄧㄥˊ ㄐㄧㄥˋ',e:'calm; tranquil; peaceful',con:'pos',reg:'cas',freq:'high',ety:'平(píng) flat/level + 靜(jìng) quiet/still. Flat and still — calm and tranquil.',comp:'平(píng flat/level) + 靜(jìng quiet/still)',ex:'她深呼吸了幾次，讓自己平靜下來，才開始回應對方的指責。',exen:'She took a few deep breaths to calm herself before responding to the accusations.',src:'class',tags:''},
+  {h:'自覺',p:'zìjué',b:'ㄗˋ ㄐㄩㄝˊ',e:'self-awareness; to be consciously aware',con:'pos',reg:'for',freq:'high',ety:'自(zì) self + 覺(jué) aware/sense. Self-awareness — the ability to observe and understand your own thoughts and behaviors.',comp:'自(zì self) + 覺(jué aware/sense)',ex:'高自覺的人能更快發現自己的盲點，做出更好的決策。',exen:'People with high self-awareness can identify their blind spots faster and make better decisions.',src:'class',tags:'psychology'},
+  {h:'顧左右而言他',p:'gù zuǒyòu ér yán tā',b:'ㄍㄨˋ ㄗㄨㄛˇ ㄧㄡˋ ㄦˊ ㄧㄢˊ ㄊㄚ',e:'to dodge the question; to change the subject; to talk around it',con:'neg',reg:'for',freq:'med',ety:'顧左右(gù zuǒyòu) look left and right + 而(ér and then) + 言他(yán tā) talk about something else. Looking around the room while talking about something completely different — classic subject-dodging.',comp:'顧(gù look at) + 左右(zuǒyòu left and right) + 言(yán speak) + 他(tā other things)',ex:'每次問他這個問題，他都顧左右而言他，從來沒有直接回答過。',exen:'Every time this question comes up he dodges it — he\'s never given a straight answer.',src:'class',tags:'idiom'},
+  {h:'波瀾不驚',p:'bōlán bùjīng',b:'ㄅㄛ ㄌㄢˊ ㄅㄨˋ ㄐㄧㄥ',e:'unruffled by waves; nothing phases you; composure under pressure',con:'pos',reg:'for',freq:'med',ety:'波瀾(bōlán) waves and ripples + 不驚(bùjīng) not startled. Waves that don\'t startle you — unshakeable composure.',comp:'波(bō wave) + 瀾(lán surge) + 不(bù not) + 驚(jīng startled)',ex:'她面對再大的危機都波瀾不驚，讓團隊非常信任她。',exen:'No matter how big the crisis, she stays unruffled — it makes the team trust her completely.',src:'class',tags:'idiom'},
+  {h:'上緊發條',p:'shàngjǐn fātiáo',b:'ㄕㄤˋ ㄐㄧㄣˇ ㄈㄚ ㄊㄧㄠˊ',e:'always \'on\'; tightly wound; running at full tension',con:'neg',reg:'cas',freq:'med',ety:'上緊(shàngjǐn) wind tight + 發條(fātiáo) spring mechanism. Winding the spring too tight — the feeling of being perpetually tense and switched on, never able to rest.',comp:'上(shàng up/wind) + 緊(jǐn tight) + 發條(fātiáo spring/clockwork)',ex:'她最近一直上緊發條，連週末都在回工作訊息。',exen:'She\'s been wound up tight lately — she\'s even responding to work messages on weekends.',src:'class',tags:''},
+  {h:'共鳴',p:'gòngmíng',b:'ㄍㄨㄥˋ ㄇㄧㄥˊ',e:'resonance; to resonate with; emotional connection',con:'pos',reg:'cas',freq:'high',ety:'共(gòng) together/shared + 鳴(míng) sound/ring. Ringing together — when something resonates deeply with you, like two strings vibrating at the same frequency.',comp:'共(gòng together/shared) + 鳴(míng sound/resonate)',ex:'她的演講引起了很多人的共鳴，社群媒體上大家都在分享。',exen:'Her speech resonated deeply with a lot of people — everyone was sharing it on social media.',src:'class',tags:''},
+  {h:'前所未有',p:'qián suǒ wèi yǒu',b:'ㄑㄧㄢˊ ㄙㄨㄛˇ ㄨㄟˋ ㄧㄡˇ',e:'unprecedented; never seen before',con:'pos',reg:'for',freq:'high',ety:'前所(qián suǒ) in what has come before + 未有(wèi yǒu) has not existed. Something that has never existed before — unprecedented.',comp:'前(qián before/previous) + 所(suǒ what) + 未(wèi not yet) + 有(yǒu exist)',ex:'AI的發展速度是前所未有的，整個產業都在重新定位。',exen:'The speed of AI development is unprecedented — the entire industry is repositioning itself.',src:'class',tags:''},
+  {h:'思維',p:'sīwéi',b:'ㄙ ㄨㄟˊ',e:'mindset; way of thinking; mentality',con:'neu',reg:'for',freq:'high',ety:'思(sī) think + 維(wéi) maintain/connect. The threads of thought that connect — a way of thinking or mindset.',comp:'思(sī think) + 維(wéi connect/maintain)',ex:'創業需要的不只是技能，更需要轉換思維，用不同的角度看問題。',exen:'Entrepreneurship requires more than skills — you need to shift your mindset and see problems from different angles.',src:'class',tags:''},
+  {h:'雷聲大雨點小',p:'léishēng dà yǔdiǎn xiǎo',b:'ㄌㄟˊ ㄕㄥ ㄉㄚˋ ㄩˇ ㄉㄧㄢˇ ㄒㄧㄠˇ',e:'all talk no action; much noise little result; big thunder small rain',con:'neg',reg:'cas',freq:'high',ety:'雷聲大(léishēng dà) thunder loud + 雨點小(yǔdiǎn xiǎo) raindrops small. Lots of thunder but tiny raindrops — when the announcement is much bigger than the actual delivery.',comp:'雷(léi thunder) + 聲(shēng sound) + 雨(yǔ rain) + 點(diǎn drops)',ex:'這個政策公布時轟轟烈烈，結果雷聲大雨點小，沒什麼實質影響。',exen:'The policy was announced with great fanfare but turned out to be all thunder and no rain — no real impact.',src:'class',tags:'idiom'},
+  {h:'凡走過必留下痕跡',p:'fán zǒuguò bì liúxià hénjī',b:'ㄈㄢˊ ㄗㄡˇ ㄍㄨㄛˋ ㄅㄧˋ ㄌㄧㄡˊ ㄒㄧㄚˋ ㄏㄣˊ ㄐㄧ',e:'everywhere you go you leave traces; your actions always leave a mark',con:'neu',reg:'for',freq:'med',ety:'凡(fán) wherever/all + 走過(zǒuguò) passed through + 必(bì) certainly + 留下(liúxià) leave behind + 痕跡(hénjī) traces/marks. Wherever you\'ve been, traces are always left — used for accountability, legacy, and digital footprints.',comp:'凡(fán wherever) + 走過(zǒuguò pass through) + 留下(liúxià leave) + 痕跡(hénjī traces)',ex:'在網路上的行為要謹慎，凡走過必留下痕跡。',exen:'Be careful about your behavior online — everywhere you go leaves traces.',src:'class',tags:'idiom'},
+  {h:'說話要看時機',p:'shuōhuà yào kàn shíjī',b:'ㄕㄨㄛ ㄏㄨㄚˋ ㄧㄠˋ ㄎㄢˋ ㄕˊ ㄐㄧ',e:'timing matters when speaking; pick the right moment to say something',con:'pos',reg:'cas',freq:'med',ety:'說話(shuōhuà) speaking + 要(yào) must + 看時機(kàn shíjī) read the timing. A practical wisdom about communication — what you say matters less than when you say it.',comp:'說話(shuōhuà speak) + 看(kàn read/observe) + 時機(shíjī timing/moment)',ex:'她有話直說，但她老闆提醒她說話要看時機，否則效果適得其反。',exen:'She speaks her mind directly, but her boss reminded her that timing matters — otherwise it backfires.',src:'class',tags:''},
+  {h:'集體主義',p:'jítǐ zhǔyì',b:'ㄐㄧˊ ㄊㄧˇ ㄓㄨˇ ㄧˋ',e:'collectivism; prioritizing the group over the individual',con:'neu',reg:'for',freq:'med',ety:'集體(jítǐ) collective/group + 主義(zhǔyì) -ism. The ideology of the collective — prioritizing group harmony and needs over individual desires.',comp:'集體(jítǐ collective) + 主義(zhǔyì ideology/-ism)',ex:'東亞社會普遍有集體主義的文化，強調和諧與群體利益。',exen:'East Asian societies generally have collectivist cultures that emphasize harmony and group interests.',src:'class',tags:''},
+  {h:'入境隨俗',p:'rùjìng suísú',b:'ㄖㄨˋ ㄐㄧㄥˋ ㄙㄨㄟˊ ㄙㄨˊ',e:'when in Rome do as the Romans do; adapt to local customs',con:'pos',reg:'for',freq:'high',ety:'入境(rùjìng) enter the territory + 隨俗(suísú) follow the customs. When you enter a place, follow its customs — cultural adaptability.',comp:'入(rù enter) + 境(jìng territory/place) + 隨(suí follow) + 俗(sú custom/practice)',ex:'她到日本工作後，很快學會了入境隨俗，適應當地的職場文化。',exen:'After moving to Japan for work she quickly learned to adapt — following local workplace customs.',src:'class',tags:'idiom'},
+  {h:'職業倦怠',p:'zhíyè juàndài',b:'ㄓˊ ㄧㄝˋ ㄐㄩㄢˋ ㄉㄞˋ',e:'burnout; career exhaustion; professional fatigue',con:'neg',reg:'for',freq:'high',ety:'職業(zhíyè) career/profession + 倦怠(juàndài) fatigue/weariness. Career weariness — burnout from sustained professional demands.',comp:'職業(zhíyè career) + 倦(juàn weary) + 怠(dài lazy/slack)',ex:'她連續工作了三年沒有休假，終於出現了職業倦怠的症狀。',exen:'After three years of working without a vacation she finally started showing symptoms of burnout.',src:'class',tags:'business'},
+  {h:'照單全收',p:'zhào dān quán shōu',b:'ㄓㄠˋ ㄉㄢ ㄑㄩㄢˊ ㄕㄡ',e:'to accept everything without question; to say yes to everything',con:'neg',reg:'cas',freq:'high',ety:'照單(zhào dān) according to the list + 全收(quán shōu) accept everything. Taking everything on the list without filtering — accepting all demands without pushback.',comp:'照(zhào according to) + 單(dān list) + 全(quán all) + 收(shōu receive/accept)',ex:'新人往往照單全收，不敢拒絕任何任務，但這樣很快就會burnout。',exen:'New employees tend to accept everything without question, afraid to say no — but this leads to burnout quickly.',src:'class',tags:''},
+  {h:'大開眼界',p:'dà kāi yǎnjiè',b:'ㄉㄚˋ ㄎㄞ ㄧㄢˇ ㄐㄧㄝˋ',e:'eye-opening; to broaden your horizons',con:'pos',reg:'cas',freq:'high',ety:'大(dà) greatly + 開(kāi) open + 眼界(yǎnjiè) field of vision/horizons. Greatly opening your field of vision — having your eyes opened wide.',comp:'大(dà greatly) + 開(kāi open) + 眼(yǎn eye) + 界(jiè boundary/world)',ex:'第一次去東南亞旅行讓她大開眼界，發現世界比她想像的更多元。',exen:'Her first trip to Southeast Asia was eye-opening — she discovered the world was more diverse than she\'d imagined.',src:'class',tags:'idiom'},
+  {h:'求好心切',p:'qiú hǎo xīnqiè',b:'ㄑㄧㄡˊ ㄏㄠˇ ㄒㄧㄣ ㄑㄧㄝˋ',e:'eager to do well; overly perfectionistic; the anxiety of wanting to be good',con:'neg',reg:'cas',freq:'med',ety:'求好(qiú hǎo) strive for excellence + 心切(xīnqiè) urgently/with an anxious heart. An urgent heart striving for perfection — trying so hard to do well that you create anxiety and mistakes.',comp:'求(qiú seek) + 好(hǎo good/excellent) + 心(xīn heart) + 切(qiè urgent/eager)',ex:'她求好心切，反而越改越亂，最後什麼都沒完成。',exen:'She was so eager to do everything perfectly that the more she revised the messier it got — nothing got finished.',src:'class',tags:''},
+  {h:'菁英',p:'jīngyīng',b:'ㄐㄧㄥ ㄧㄥ',e:'elite; the cream of the crop',con:'pos',reg:'for',freq:'high',ety:'菁(jīng) the essence/best part of a plant + 英(yīng) outstanding/heroic. The flowering essence — the elite.',comp:'菁(jīng essence/best) + 英(yīng outstanding/heroic)',ex:'她進入了一個菁英雲集的行業，壓力很大但也非常有刺激感。',exen:'She entered an industry full of elites — enormous pressure but also very stimulating.',src:'class',tags:''},
+  {h:'寓言',p:'yùyán',b:'ㄩˋ ㄧㄢˊ',e:'fable; parable; allegorical story',con:'neu',reg:'for',freq:'med',ety:'寓(yù) lodge/imply + 言(yán) words/story. Words with a hidden lodging — a story that carries a deeper meaning.',comp:'寓(yù imply/lodge) + 言(yán words/story)',ex:'《龜兔賽跑》是一個有名的寓言，告訴我們不能驕傲大意。',exen:'The Tortoise and the Hare is a famous fable that teaches us not to be arrogant and careless.',src:'class',tags:''},
+  {h:'生活瑣事',p:'shēnghuó suǒshì',b:'ㄕㄥ ㄏㄨㄛˊ ㄙㄨㄛˇ ㄕˋ',e:'life admin; mundane daily tasks; the little things of life',con:'neg',reg:'cas',freq:'high',ety:'生活(shēnghuó) daily life + 瑣事(suǒshì) trivial matters. The trivial matters of daily life — all the small things that need to get done.',comp:'生活(shēnghuó life) + 瑣(suǒ trivial/fragmentary) + 事(shì matter/task)',ex:'搬家之後有太多生活瑣事要處理，光是設定水電就花了一個下午。',exen:'After moving there was so much life admin to deal with — just setting up utilities took an entire afternoon.',src:'class',tags:''},
+  {h:'性騷擾',p:'xìng sāorǎo',b:'ㄒㄧㄥˋ ㄙㄠ ㄖㄠˇ',e:'sexual harassment',con:'neg',reg:'for',freq:'high',ety:'性(xìng) sexual/gender + 騷擾(sāorǎo) harass/disturb. Sexual disturbance — sexual harassment.',comp:'性(xìng sexual) + 騷(sāo disturb) + 擾(rǎo harass)',ex:'她鼓起勇氣舉報了職場性騷擾，引起了很大的社會討論。',exen:'She found the courage to report workplace sexual harassment — it sparked major public discussion.',src:'class',tags:''},
+  {h:'來源',p:'láiyuán',b:'ㄌㄞˊ ㄩㄢˊ',e:'source; origin; where something comes from',con:'neu',reg:'for',freq:'high',ety:'來(lái) come + 源(yuán) source/origin. Where it comes from — the source or origin.',comp:'來(lái come) + 源(yuán source/origin)',ex:'這份報告的數據來源是政府的官方統計，可信度很高。',exen:'The data in this report comes from official government statistics — it\'s very reliable.',src:'class',tags:'business'},
+  {h:'分心',p:'fēnxīn',b:'ㄈㄣ ㄒㄧㄣ',e:'to be distracted; to lose focus',con:'neg',reg:'cas',freq:'high',ety:'分(fēn) divide/split + 心(xīn) heart/attention. A split heart — divided attention.',comp:'分(fēn divide) + 心(xīn heart/attention)',ex:'她很容易分心，在咖啡廳工作比在家效率高很多。',exen:'She gets distracted easily — working in a coffee shop is much more productive than working from home.',src:'class',tags:''},
+  {h:'瞎忙',p:'xiāmáng',b:'ㄒㄧㄚ ㄇㄤˊ',e:'blindly busy; busy for no good reason; spinning wheels',con:'neg',reg:'cas',freq:'high',ety:'瞎(xiā) blind + 忙(máng) busy. Blind busyness — running around doing things without any clear purpose or result.',comp:'瞎(xiā blind) + 忙(máng busy)',ex:'她這一週瞎忙了五天，做了很多事情，卻沒有一件真正重要的。',exen:'She spent five days this week blindly busy — lots of activity but nothing that actually mattered.',src:'class',tags:'slang'},
+  {h:'雷區',p:'léiqū',b:'ㄌㄟˊ ㄑㄩ',e:'minefield; sensitive topic; a subject that triggers someone',con:'neg',reg:'cas',freq:'high',ety:'雷(léi) mine/explosive device + 區(qū) zone/area. A minefield zone — topics or behaviors that trigger a strong negative reaction.',comp:'雷(léi landmine) + 區(qū zone/area)',ex:'跟她聊天要小心，她的前任是個大雷區，千萬不要提。',exen:'Be careful when talking to her — her ex is a major minefield, whatever you do don\'t bring him up.',src:'class',tags:'slang'},
+  {h:'立flag',p:'lì flag',b:'ㄌㄧˋ flag',e:'to jinx yourself; to call your own failure in advance; to flag',con:'neg',reg:'cas',freq:'med',ety:'Internet slang. 立(lì) set up/plant + flag (English). Planting a flag that marks your future downfall — like saying \'nothing can go wrong\' right before everything goes wrong.',comp:'立(lì plant/set up) + flag (旗幟 marker)',ex:'他說「這個報告應該很簡單」，真的是在立flag，後來改了十次。',exen:'He said \'this report should be simple\' — total jinx, he ended up revising it ten times.',src:'class',tags:'slang'},
+  {h:'抒發',p:'shūfā',b:'ㄕㄨ ㄈㄚ',e:'to express feelings; to vent; to give voice to emotions',con:'pos',reg:'cas',freq:'high',ety:'抒(shū) express/pour out + 發(fā) emit/release. Pouring out and releasing — expressing emotions.',comp:'抒(shū express/pour out) + 發(fā emit/release)',ex:'寫日記對她來說是一種抒發情緒的方式，讓她感覺輕鬆一些。',exen:'Keeping a journal is a way for her to express her emotions — it makes her feel a little lighter.',src:'class',tags:''},
+  {h:'心如止水',p:'xīn rú zhǐ shuǐ',b:'ㄒㄧㄣ ㄖㄨˊ ㄓˇ ㄕㄨㄟˇ',e:'calm and at peace; heart like still water',con:'pos',reg:'for',freq:'med',ety:'心(xīn) heart + 如(rú) like + 止水(zhǐ shuǐ) still water. A heart like still water — the deepest kind of calm, undisturbed by external turbulence.',comp:'心(xīn heart) + 如(rú like) + 止(zhǐ still/stop) + 水(shuǐ water)',ex:'禪修了幾年後，她能做到心如止水，不再被小事影響。',exen:'After years of meditation she can achieve true stillness — minor things no longer affect her.',src:'class',tags:'idiom'},
+  {h:'募款',p:'mùkuǎn',b:'ㄇㄨˋ ㄎㄨㄢˇ',e:'fundraising; to raise funds',con:'neu',reg:'for',freq:'med',ety:'募(mù) recruit/gather + 款(kuǎn) funds/money. Gathering funds — fundraising.',comp:'募(mù recruit/gather) + 款(kuǎn funds/money)',ex:'她花了半年時間募款，終於為公益計畫籌到了足夠的資金。',exen:'She spent six months fundraising and finally raised enough money for the public welfare project.',src:'class',tags:'business'},
+  {h:'理財',p:'lǐcái',b:'ㄌㄧˇ ㄘㄞˊ',e:'financial planning; money management',con:'pos',reg:'cas',freq:'high',ety:'理(lǐ) manage/organize + 財(cái) wealth/money. Managing your wealth — financial planning.',comp:'理(lǐ manage) + 財(cái wealth/money)',ex:'她從大學就開始學理財，現在存款比同年齡的人多很多。',exen:'She started learning financial planning in college — her savings are now much higher than peers her age.',src:'class',tags:'business'},
+  {h:'和平相處',p:'hépíng xiāngchǔ',b:'ㄏㄜˊ ㄆㄧㄥˊ ㄒㄧㄤ ㄔㄨˇ',e:'to coexist peacefully; to get along harmoniously',con:'pos',reg:'for',freq:'high',ety:'和平(hépíng) peace + 相處(xiāngchǔ) get along/coexist. Peaceful coexistence — living or working together harmoniously.',comp:'和平(hépíng peace) + 相(xiāng mutually) + 處(chǔ exist/get along)',ex:'即使意見不同，同事之間還是可以和平相處，尊重彼此的想法。',exen:'Even when opinions differ, colleagues can still coexist peacefully and respect each other\'s views.',src:'class',tags:''},
+  {h:'優先順序',p:'yōuxiān shùnxù',b:'ㄧㄡ ㄒㄧㄢ ㄕㄨㄣˋ ㄒㄩˋ',e:'prioritization; order of priority',con:'neu',reg:'for',freq:'high',ety:'優先(yōuxiān) priority/preferential + 順序(shùnxù) order/sequence. The sequence of what comes first — prioritization.',comp:'優先(yōuxiān priority) + 順(shùn order/sequence) + 序(xù order)',ex:'她每天早上花十分鐘設定優先順序，確保最重要的事情先做。',exen:'She spends ten minutes every morning setting her priorities to make sure the most important things get done first.',src:'class',tags:'business'},
+  {h:'廣泛',p:'guǎngfàn',b:'ㄍㄨㄤˇ ㄈㄢˋ',e:'broad; wide-ranging; extensive',con:'pos',reg:'for',freq:'high',ety:'廣(guǎng) wide/broad + 泛(fàn) spread/float widely. Wide and widely spread — broad in scope.',comp:'廣(guǎng wide) + 泛(fàn spread widely)',ex:'她的興趣非常廣泛，從藝術到科技她都有涉獵。',exen:'Her interests are extremely broad — she has knowledge of everything from art to technology.',src:'class',tags:''},
+  {h:'評價',p:'píngjià',b:'ㄆㄧㄥˊ ㄐㄧㄚˋ',e:'evaluation; review; feedback; judgment',con:'neu',reg:'for',freq:'high',ety:'評(píng) evaluate/comment + 價(jià) value/price. Assigning value through evaluation — a review or judgment.',comp:'評(píng evaluate) + 價(jià value/price)',ex:'她很在乎別人的評價，但最後還是學會了不把它放在心上。',exen:'She used to care a lot about others\' judgments, but she eventually learned not to take them to heart.',src:'class',tags:''},
+  {h:'框架',p:'kuàngjià',b:'ㄎㄨㄤˋ ㄐㄧㄚˋ',e:'framework; structure; mental frame',con:'neu',reg:'for',freq:'high',ety:'框(kuàng) frame/border + 架(jià) structure/shelf. A framed structure — a framework for thinking or organizing.',comp:'框(kuàng frame) + 架(jià structure/scaffold)',ex:'她用了一個思考框架來分析這個問題，讓討論更有條理。',exen:'She used a thinking framework to analyze the problem — it made the discussion much more organized.',src:'class',tags:'business'},
+  {h:'系統思維',p:'xìtǒng sīwéi',b:'ㄒㄧˋ ㄊㄨㄥˇ ㄙ ㄨㄟˊ',e:'systems thinking; seeing the whole system and its interactions',con:'pos',reg:'for',freq:'med',ety:'系統(xìtǒng) system + 思維(sīwéi) thinking/mindset. A way of thinking that sees everything as part of an interconnected system rather than isolated parts.',comp:'系統(xìtǒng system) + 思維(sīwéi thinking/mindset)',ex:'她的系統思維很強，能快速看出一個決策如何影響整個組織。',exen:'Her systems thinking is impressive — she can quickly see how one decision ripples through an entire organization.',src:'class',tags:'business'},
+  {h:'資源配置',p:'zīyuán pèizhì',b:'ㄗ ㄩㄢˊ ㄆㄟˋ ㄓˋ',e:'resource allocation',con:'neu',reg:'for',freq:'high',ety:'資源(zīyuán) resources + 配置(pèizhì) allocate/arrange. Arranging resources where they\'re needed — allocation.',comp:'資源(zīyuán resources) + 配(pèi match/allocate) + 置(zhì place/arrange)',ex:'好的管理者懂得資源配置，把對的人放在對的位置上。',exen:'A good manager knows how to allocate resources — putting the right people in the right positions.',src:'class',tags:'business'},
+  {h:'後設學習',p:'hòushè xuéxí',b:'ㄏㄡˋ ㄕㄜˋ ㄒㄩㄝˊ ㄒㄧˊ',e:'meta-learning; learning how to learn',con:'pos',reg:'for',freq:'low',ety:'後設(hòushè) meta- (beyond/about) + 學習(xuéxí) learning. Learning about learning — the study of how to learn more effectively.',comp:'後設(hòushè meta-) + 學習(xuéxí learning)',ex:'她在讀MBA之前先花時間研究後設學習，找到最適合自己的讀書方法。',exen:'Before starting her MBA she spent time studying meta-learning to find the study methods that work best for her.',src:'class',tags:''},
+  {h:'競爭優勢',p:'jìngzhēng yōushì',b:'ㄐㄧㄥˋ ㄓㄥ ㄧㄡ ㄕˋ',e:'competitive advantage',con:'pos',reg:'for',freq:'high',ety:'競爭(jìngzhēng) compete + 優勢(yōushì) advantage/superiority. The advantage in competition — what sets you apart from competitors.',comp:'競爭(jìngzhēng competition) + 優(yōu superior) + 勢(shì advantage/momentum)',ex:'她的競爭優勢在於她能同時理解技術和商業，這種人才很稀缺。',exen:'Her competitive advantage is her ability to understand both technology and business — that combination is rare.',src:'class',tags:'business'}];
+
+// ─── SM-2 LOGIC ──────────────────────────────────────────────────────────────
+function getSM2(id) {
+  try {
+    const d = JSON.parse(localStorage.getItem('sm2_' + id) || 'null');
+    return d || { reps: 0, ef: 2.5, interval: 0, nextReview: 0 };
+  } catch(e) { return { reps: 0, ef: 2.5, interval: 0, nextReview: 0 }; }
+}
+
+function saveSM2(id, data) {
+  try { localStorage.setItem('sm2_' + id, JSON.stringify(data)); } catch(e) {}
+}
+
+function updateSM2(id, grade) {
+  // grade: 0=Again, 1=Hard, 2=Good, 3=Easy (maps to q: 1,3,4,5)
+  const q = [1,3,4,5][grade];
+  let d = getSM2(id);
+  if (q < 3) {
+    d.reps = 0; d.interval = 1;
+  } else {
+    if (d.reps === 0) d.interval = 1;
+    else if (d.reps === 1) d.interval = 6;
+    else d.interval = Math.round(d.interval * d.ef);
+    d.reps++;
+    d.ef = Math.max(1.3, d.ef + 0.1 - (5-q)*(0.08 + (5-q)*0.02));
+  }
+  d.nextReview = Date.now() + d.interval * 86400000;
+  saveSM2(id, d);
+  return d;
+}
+
+function isDue(id) {
+  const d = getSM2(id);
+  return d.nextReview === 0 || Date.now() >= d.nextReview;
+}
+
+function wordId(w) {
+  return w.h.replace(/[^a-zA-Z\u4e00-\u9fff]/g,'');
+}
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let allWords = [];
+let activeFilter = 'all';
+let currentTab = 'browse';
+let quizQueue = [];
+let quizIndex = 0;
+let quizFlipped = false;
+let quizStats = { again: 0, hard: 0, good: 0, easy: 0 };
+let openWord = null;
+
+// ─── LOAD DATA ───────────────────────────────────────────────────────────────
+async function loadData() {
+  showSync('載入中...', false);
+  allWords = [...BUILTIN];
+
+  try {
+    const resp = await fetch(SHEET_URL + '&t=' + Date.now());
+    if (resp.ok) {
+      const text = await resp.text();
+      const rows = parseCSV(text);
+      if (rows.length > 1) {
+        const headers = rows[0].map(h => h.trim().toLowerCase());
+        const sheetWords = rows.slice(1).filter(r => r[0] && r[0].trim()).map(r => {
+          const w = {};
+          headers.forEach((h,i) => w[h] = (r[i]||'').trim());
+          return { h:w.hanzi, p:w.pinyin, b:w.bopomofo, e:w.english,
+            con:w.connotation, reg:w.register, freq:w.frequency,
+            ety:w.etymology, comp:w.components, ex:w.example,
+            exen:w.exampleenglish||'', src:w.source, tags:w.tags||'' };
+        });
+        // merge: sheet words override built-in by hanzi
+        const builtinMap = new Map(BUILTIN.map(w => [w.h, w]));
+        sheetWords.forEach(w => builtinMap.set(w.h, w));
+        allWords = Array.from(builtinMap.values());
+        showSync('✓ 已同步 Google Sheets (' + sheetWords.length + ' 個新詞)', false);
+        setTimeout(() => hideSync(), 3000);
+      } else { hideSync(); }
+    } else { hideSync(); }
+  } catch(e) { hideSync(); }
+
+  updateHeader();
+  updateDueBadge();
+  renderBrowse();
+}
+
+function parseCSV(text) {
+  const rows = []; let row = []; let cell = ''; let inQ = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (c === '"') { if (inQ && text[i+1]==='"') { cell+='"'; i++; } else inQ=!inQ; }
+    else if (c === ',' && !inQ) { row.push(cell); cell=''; }
+    else if ((c==='\n'||c==='\r') && !inQ) {
+      if (c==='\r'&&text[i+1]==='\n') i++;
+      row.push(cell); rows.push(row); row=[]; cell='';
+    } else cell+=c;
+  }
+  if (cell||row.length) { row.push(cell); rows.push(row); }
+  return rows;
+}
+
+function showSync(msg, isError) {
+  const bar = document.getElementById('syncBar');
+  bar.textContent = msg;
+  bar.className = 'sync-bar show' + (isError?' error':'');
+}
+function hideSync() { document.getElementById('syncBar').className='sync-bar'; }
+
+// ─── HEADER ──────────────────────────────────────────────────────────────────
+function updateHeader() {
+  const known = allWords.filter(w => getSM2(wordId(w)).reps > 0).length;
+  const due = allWords.filter(w => isDue(wordId(w))).length;
+  document.getElementById('headerStats').innerHTML =
+    `<b>${allWords.length}</b> 個詞 · <b>${known}</b> 已學 · <b>${due}</b> 待複習`;
+}
+
+function updateDueBadge() {
+  const due = allWords.filter(w => isDue(wordId(w))).length;
+  const badge = document.getElementById('dueBadge');
+  if (due > 0) { badge.textContent = due; badge.style.display='inline-block'; }
+  else badge.style.display='none';
+}
+
+// ─── TABS ────────────────────────────────────────────────────────────────────
+function showTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ['browse','quiz'][i]===tab));
+  document.getElementById('browseTab').style.display = tab==='browse'?'block':'none';
+  document.getElementById('quizTab').style.display = tab==='quiz'?'block':'none';
+  if (tab==='quiz') startQuiz();
+}
+
+// ─── BROWSE ──────────────────────────────────────────────────────────────────
+function renderBrowse() {
+  const search = (document.getElementById('searchInput').value||'').toLowerCase();
+  const normalSearch = search.replace(/[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]/g, c =>
+    'aaaaeeeeiiiioooouu uu'['āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ'.indexOf(c)]||c);
+
+  const filters = {
+    all: () => true,
+    due: w => isDue(wordId(w)),
+    idiom: w => (w.tags||'').includes('idiom'),
+    song: w => (w.tags||'').includes('song'),
+    connector: w => (w.tags||'').includes('connector'),
+    business: w => (w.tags||'').includes('business'),
+    pattern: w => (w.tags||'').includes('pattern'),
+    known: w => getSM2(wordId(w)).reps > 2,
+    learning: w => { const d=getSM2(wordId(w)); return d.reps>0 && d.reps<=2; }
+  };
+
+  // Build filter buttons
+  const filterDef = [
+    {k:'all',label:'全部'},
+    {k:'due',label:'📌 待複習'},
+    {k:'idiom',label:'成語'},
+    {k:'song',label:'🎵 歌曲'},
+    {k:'connector',label:'🔗 連接詞'},
+    {k:'pattern',label:'📐 語法'},
+    {k:'business',label:'💼 商業'},
+    {k:'known',label:'✓ 已學'},
+    {k:'learning',label:'學習中'},
+  ];
+  const fContainer = document.getElementById('filterBtns');
+  if (!fContainer.children.length) {
+    filterDef.forEach(f => {
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn' + (f.k===activeFilter?' active':'');
+      btn.textContent = f.label;
+      btn.onclick = () => { activeFilter=f.k; renderBrowse(); };
+      fContainer.appendChild(btn);
+    });
+  } else {
+    fContainer.querySelectorAll('.filter-btn').forEach((btn,i) => {
+      btn.className='filter-btn'+(filterDef[i].k===activeFilter?' active':'');
+    });
+  }
+
+  let words = allWords.filter(filters[activeFilter]||filters.all);
+  if (search) {
+    words = words.filter(w => {
+      const pNorm = (w.p||'').toLowerCase().replace(/[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]/g,
+        c=>'aaaaeeeeiiiioooouu uu'['āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ'.indexOf(c)]||c)
+        .replace(/\s/g,'').replace(/[0-9]/g,'');
+      return (w.h||'').includes(search) ||
+             pNorm.includes(normalSearch.replace(/\s/g,'')) ||
+             (w.e||'').toLowerCase().includes(search) ||
+             (w.src||'').toLowerCase().includes(search);
+    });
+  }
+
+  const grid = document.getElementById('wordGrid');
+  if (!words.length) {
+    grid.innerHTML = '<div class="empty-state"><div class="big">🔍</div>找不到符合的詞</div>';
+    return;
+  }
+
+  grid.innerHTML = '';
+  words.forEach(w => {
+    const id = wordId(w);
+    const sm2 = getSM2(id);
+    const isPattern = (w.tags||'').includes('pattern');
+    const card = document.createElement('div');
+    const statusClass = sm2.reps>2?'known':sm2.reps>0?'learning':'';
+    card.className = 'word-card ' + statusClass + (isPattern?' pattern-card':'');
+    card.onclick = () => openDrawer(w);
+
+    const dotClass = sm2.nextReview===0?'sm2-new':isDue(id)?'sm2-due':'sm2-ok';
+
+    let conBadge='';
+    if(w.con==='pos') conBadge='<span class="badge badge-pos">正面</span>';
+    else if(w.con==='neg') conBadge='<span class="badge badge-neg">負面</span>';
+
+    let regBadge='';
+    if(w.reg==='cas') regBadge='<span class="badge badge-cas">口語</span>';
+    else if(w.reg==='for') regBadge='<span class="badge badge-for">正式</span>';
+    else if(w.reg==='wri') regBadge='<span class="badge badge-wri">書面</span>';
+
+    let srcBadge = w.src&&w.src.startsWith('song:')?
+      `<span class="badge badge-src">🎵${w.src.replace('song:','')}</span>`:'';
+    let freqBadge = w.freq==='high'?'<span class="badge badge-freq-high">⭐常用</span>':'';
+    let connBadge = (w.tags||'').includes('connector')?'<span class="badge badge-conn">🔗</span>':'';
+    let patternBadge = isPattern?'<span class="badge badge-conn">📐語法</span>':'';
+
+    card.innerHTML = `
+      <div class="sm2-indicator ${dotClass}"></div>
+      <div class="${isPattern?'pattern-hanzi':'card-hanzi'}">${w.h}</div>
+      <div class="card-pinyin">${w.p}</div>
+      <div class="card-english">${w.e}</div>
+      <div class="card-badges">${freqBadge}${conBadge}${regBadge}${connBadge}${patternBadge}${srcBadge}</div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+// ─── DRAWER ──────────────────────────────────────────────────────────────────
+function openDrawer(w) {
+  openWord = w;
+  const isPattern = (w.tags||'').includes('pattern');
+  document.getElementById('drawerContent').innerHTML = `
+    <div class="drawer-hanzi">${w.h}</div>
+    <div class="drawer-pinyin">${w.p}</div>
+    ${w.b?`<div class="drawer-bopomofo">${w.b}</div>`:''}
+    <div class="drawer-english">${w.e}</div>
+    ${w.h?`<button class="audio-btn" onclick="playAudio('${w.h}')">🔊 播放發音</button>`:''}
+    ${w.ex?`
+    <div class="drawer-section">
+      <div class="drawer-label">例句</div>
+      <div class="drawer-example">
+        <div class="zh">${w.ex}</div>
+        ${w.exen?`<div class="en">${w.exen}</div>`:''}
+      </div>
+    </div>`:''}
+    ${!isPattern && w.ety?`
+    <div class="drawer-section">
+      <div class="drawer-label">為什麼這樣說</div>
+      <div class="drawer-text">${w.ety}</div>
+    </div>`:''}
+    ${!isPattern && w.comp?`
+    <div class="drawer-section">
+      <div class="drawer-label">部首與組成</div>
+      <div class="drawer-text">${w.comp}</div>
+    </div>`:''}
+    ${w.src?`
+    <div class="drawer-section">
+      <div class="drawer-label">來源</div>
+      <div class="drawer-text">${w.src}</div>
+    </div>`:''}
+  `;
+  document.getElementById('drawerOverlay').classList.add('open');
+}
+
+function closeDrawer(e) {
+  if (!e || e.target===document.getElementById('drawerOverlay')) {
+    document.getElementById('drawerOverlay').classList.remove('open');
+  }
+}
+
+function playAudio(text) {
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'zh-TW'; u.rate = 0.85;
+  const voices = speechSynthesis.getVoices();
+  const tw = voices.find(v=>v.lang==='zh-TW')||voices.find(v=>v.lang.startsWith('zh'));
+  if(tw) u.voice=tw;
+  speechSynthesis.speak(u);
+}
+
+// ─── QUIZ ────────────────────────────────────────────────────────────────────
+function startQuiz() {
+  // Sort: due words first, then by frequency
+  const freqScore = {high:3, med:2, low:1};
+  quizQueue = [...allWords].sort((a,b) => {
+    const aDue = isDue(wordId(a)) ? 1 : 0;
+    const bDue = isDue(wordId(b)) ? 1 : 0;
+    if (aDue !== bDue) return bDue - aDue;
+    return (freqScore[b.freq]||1) - (freqScore[a.freq]||1);
+  });
+  quizIndex = 0; quizFlipped = false;
+  quizStats = { again:0, hard:0, good:0, easy:0 };
+  renderQuiz();
+}
+
+function renderQuiz() {
+  const c = document.getElementById('quizContainer');
+  if (quizIndex >= Math.min(quizQueue.length, 20)) {
+    renderQuizDone(); return;
+  }
+  const w = quizQueue[quizIndex];
+  const isPattern = (w.tags||'').includes('pattern');
+  const progress = quizIndex / Math.min(quizQueue.length, 20);
+
+  c.innerHTML = `
+    <div class="quiz-progress">
+      <span>${quizIndex + 1} / ${Math.min(quizQueue.length, 20)}</span>
+      <span style="color:#999;font-size:12px">${isDue(wordId(w))?'📌 待複習':'新詞'}</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${progress*100}%"></div></div>
+    <div class="quiz-card ${quizFlipped?'flipped':''}" id="quizCard" onclick="flipCard()">
+      <div class="quiz-hanzi">${w.h}</div>
+      ${isPattern?`<div style="font-size:13px;color:${quizFlipped?'rgba(255,255,255,0.6)':'#888'};margin-top:4px">語法模式</div>`:''}
+      ${quizFlipped?`
+      <div class="quiz-reveal">
+        <div class="quiz-pinyin">${w.p}</div>
+        <div class="quiz-english">${w.e}</div>
+        ${w.src&&w.src.startsWith('song:')?`<div class="quiz-src">🎵 ${w.src.replace('song:','')}</div>`:''}
+      </div>`:''}
+      <div class="quiz-prompt">${quizFlipped?'評分：':'點擊翻轉'}</div>
+    </div>
+    ${quizFlipped?`
+    <div class="sm2-buttons">
+      <button class="sm2-btn sm2-again" onclick="rateCard(0)">又忘了</button>
+      <button class="sm2-btn sm2-hard" onclick="rateCard(1)">很難</button>
+      <button class="sm2-btn sm2-good" onclick="rateCard(2)">記得</button>
+      <button class="sm2-btn sm2-easy" onclick="rateCard(3)">很熟</button>
+    </div>
+    <div class="sm2-labels">
+      <span class="sm2-label">明天再看</span>
+      <span class="sm2-label">幾天後</span>
+      <span class="sm2-label">下週</span>
+      <span class="sm2-label">更久後</span>
+    </div>`:''}
+    <div class="quiz-actions">
+      ${quizFlipped?`<button class="quiz-action-btn" onclick="openDrawer(quizQueue[quizIndex])">深入 →</button>`:''}
+      <button class="quiz-action-btn" onclick="skipCard()">跳過</button>
+    </div>
+  `;
+}
+
+function flipCard() {
+  if (!quizFlipped) { quizFlipped=true; renderQuiz(); }
+}
+
+function rateCard(grade) {
+  const w = quizQueue[quizIndex];
+  updateSM2(wordId(w), grade);
+  if(grade===0) quizStats.again++;
+  else if(grade===1) quizStats.hard++;
+  else if(grade===2) quizStats.good++;
+  else quizStats.easy++;
+  quizIndex++; quizFlipped=false;
+  updateHeader(); updateDueBadge();
+  renderQuiz();
+}
+
+function skipCard() {
+  quizIndex++; quizFlipped=false; renderQuiz();
+}
+
+function renderQuizDone() {
+  const c = document.getElementById('quizContainer');
+  const total = quizStats.again+quizStats.hard+quizStats.good+quizStats.easy;
+  const due = allWords.filter(w=>isDue(wordId(w))).length;
+  c.innerHTML = `
+    <div class="quiz-done">
+      <div class="quiz-done-hanzi">好棒！</div>
+      <h2>測驗完成</h2>
+      <p>今天複習了 ${total} 個詞${due>0?`，還有 ${due} 個待複習`:'，全部都複習完了！'}</p>
+      <div class="quiz-done-stats">
+        <div class="done-stat"><div class="done-stat-num" style="color:#c62828">${quizStats.again}</div><div class="done-stat-label">又忘了</div></div>
+        <div class="done-stat"><div class="done-stat-num" style="color:#e65100">${quizStats.hard}</div><div class="done-stat-label">很難</div></div>
+        <div class="done-stat"><div class="done-stat-num" style="color:#2e7d32">${quizStats.good}</div><div class="done-stat-label">記得</div></div>
+        <div class="done-stat"><div class="done-stat-num" style="color:#1565c0">${quizStats.easy}</div><div class="done-stat-label">很熟</div></div>
+      </div>
+      <button class="restart-btn" onclick="startQuiz()">再來一輪</button>
+    </div>
+  `;
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+speechSynthesis.onvoiceschanged = () => {};
+loadData();
+</script>
+</body>
+</html>
